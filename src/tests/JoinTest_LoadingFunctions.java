@@ -63,7 +63,8 @@ class Reserves {
 }
 
 class JoinsDriver implements GlobalConst {
-  
+  private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
+
   private boolean OK = true;
   private boolean FAIL = false;
   private Vector sailors;
@@ -72,7 +73,15 @@ class JoinsDriver implements GlobalConst {
   /** Constructor
    */
   public JoinsDriver() {
-    
+	Heapfile g = null;
+	  try {
+	   g = new Heapfile("sailors.in");
+	  }
+	   
+	  catch (Exception e) {
+	   System.err.println("*** error in Heapfile constructor ***");
+	   e.printStackTrace();
+	  }
     //build Sailor, Boats, Reserves table
     sailors  = new Vector();
     boats    = new Vector();
@@ -1835,7 +1844,7 @@ class JoinsDriver implements GlobalConst {
   }
 }
 
-public class JoinTest
+public class JoinTest_LoadingFunctions
 {
   public static void main(String argv[])
   {

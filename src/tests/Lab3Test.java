@@ -47,15 +47,16 @@ class JoinsLab3Driver implements GlobalConst {
     catch (IOException e) {
       System.err.println (""+e);
     }
+    SystemDefs sysdef = new SystemDefs( dbpath, 1000, NUMBUF, "Clock" );
 
+    
     //Build S.in
     System.out.println("dir : "+DATA_DIR_PATH+"S.txt");
-    File2Heap(DATA_DIR_PATH+"S.txt", "S.in", (int)10000);
+    File2Heap(DATA_DIR_PATH+"S.txt", "S.in", 100);
     
     //Build R.in database
-    File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 10000);
+    File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 100);
    
-    
   }
   
  
@@ -177,7 +178,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter("output_query1a.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
 			
 			while ((t = nlj.get_next()) != null) {
 				i++;
@@ -255,6 +256,7 @@ class JoinsLab3Driver implements GlobalConst {
 	       
 	      try {
 	       f = new Heapfile(fileNameOutput);
+
 	      }
 	       
 	      catch (Exception e) {
@@ -1614,7 +1616,6 @@ public class Lab3Test
   public static void main(String argv[])
   {
     boolean sortstatus;
-    System.out.println("It comes here");
 
     JoinsLab3Driver jjoin = new JoinsLab3Driver();
 
