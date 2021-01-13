@@ -115,6 +115,7 @@ public class SelfJoin extends Iterator{
 		try {
 			while ((tuple = L1.get_next()) != null)
 			{	
+				System.out.println("Tuple : "+tuple);
 				data.add(tuple);
 			}
 		} catch (Exception e1) {
