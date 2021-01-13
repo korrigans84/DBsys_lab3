@@ -1,4 +1,5 @@
 package tests;
+//originally from : joins.C
 
 import iterator.*;
 import heap.*;
@@ -12,16 +13,113 @@ import bufmgr.*;
 import btree.*; 
 import catalog.*;
 
+/**
+   Here is the implementation for the tests. There are N tests performed.
+   We start off by showing that each operator works on its own.
+   Then more complicated trees are constructed.
+   As a nice feature, we allow the user to specify a selection condition.
+   We also allow the user to hardwire trees together.
+*/
 
-class JoinsLab3Driver implements GlobalConst {
-  private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
+//Define the Sailor schema
+class Sailor {
+  public int    sid;
+  public String sname;
+  public int    rating;
+  public double age;
+  
+  public Sailor (int _sid, String _sname, int _rating,double _age) {
+    sid    = _sid;
+    sname  = _sname;
+    rating = _rating;
+    age    = _age;
+  }
+}
+
+//Define the Boat schema
+class Boats {
+  public int    bid;
+  public String bname;
+  public String color;
+  
+  public Boats (int _bid, String _bname, String _color) {
+    bid   = _bid;
+    bname = _bname;
+    color = _color;
+  }
+}
+
+//Define the Reserves schema
+class Reserves {
+  public int    sid;
+  public int    bid;
+  public String date;
+  
+  public Reserves (int _sid, int _bid, String _date) {
+    sid  = _sid;
+    bid  = _bid;
+    date = _date;
+  }
+}
+
+class JoinsDriver implements GlobalConst {
+  
   private boolean OK = true;
   private boolean FAIL = false;
-
+  private Vector sailors;
+  private Vector boats;
+  private Vector reserves;
   /** Constructor
    */
-  public JoinsLab3Driver() {
+  public JoinsDriver() {
     
+    //build Sailor, Boats, Reserves table
+    sailors  = new Vector();
+    boats    = new Vector();
+    reserves = new Vector();
+    
+    sailors.addElement(new Sailor(53, "Bob Holloway",       9, 53.6));
+    sailors.addElement(new Sailor(54, "Susan Horowitz",     1, 34.2));
+    sailors.addElement(new Sailor(57, "Yannis Ioannidis",   8, 40.2));
+    sailors.addElement(new Sailor(59, "Deborah Joseph",    10, 39.8));
+    sailors.addElement(new Sailor(61, "Landwebber",         8, 56.7));
+    sailors.addElement(new Sailor(63, "James Larus",        9, 30.3));
+    sailors.addElement(new Sailor(64, "Barton Miller",      5, 43.7));
+    sailors.addElement(new Sailor(67, "David Parter",       1, 99.9));   
+    sailors.addElement(new Sailor(69, "Raghu Ramakrishnan", 9, 37.1));
+    sailors.addElement(new Sailor(71, "Guri Sohi",         10, 42.1));
+    sailors.addElement(new Sailor(73, "Prasoon Tiwari",     8, 39.2));
+    sailors.addElement(new Sailor(39, "Anne Condon",        3, 30.3));
+    sailors.addElement(new Sailor(47, "Charles Fischer",    6, 46.3));
+    sailors.addElement(new Sailor(49, "James Goodman",      4, 50.3));
+    sailors.addElement(new Sailor(50, "Mark Hill",          5, 35.2));
+    sailors.addElement(new Sailor(75, "Mary Vernon",        7, 43.1));
+    sailors.addElement(new Sailor(79, "David Wood",         3, 39.2));
+    sailors.addElement(new Sailor(84, "Mark Smucker",       9, 25.3));
+    sailors.addElement(new Sailor(87, "Martin Reames",     10, 24.1));
+    sailors.addElement(new Sailor(10, "Mike Carey",         9, 40.3));
+    sailors.addElement(new Sailor(21, "David Dewitt",      10, 47.2));
+    sailors.addElement(new Sailor(29, "Tom Reps",           7, 39.1));
+    sailors.addElement(new Sailor(31, "Jeff Naughton",      5, 35.0));
+    sailors.addElement(new Sailor(35, "Miron Livny",        7, 37.6));
+    sailors.addElement(new Sailor(37, "Marv Solomon",      10, 48.9));
+
+    boats.addElement(new Boats(1, "Onion",      "white"));
+    boats.addElement(new Boats(2, "Buckey",     "red"  ));
+    boats.addElement(new Boats(3, "Enterprise", "blue" ));
+    boats.addElement(new Boats(4, "Voyager",    "green"));
+    boats.addElement(new Boats(5, "Wisconsin",  "red"  ));
+ 
+    reserves.addElement(new Reserves(10, 1, "05/10/95"));
+    reserves.addElement(new Reserves(21, 1, "05/11/95"));
+    reserves.addElement(new Reserves(10, 2, "05/11/95"));
+    reserves.addElement(new Reserves(31, 1, "05/12/95"));
+    reserves.addElement(new Reserves(10, 3, "05/13/95"));
+    reserves.addElement(new Reserves(69, 4, "05/12/95"));
+    reserves.addElement(new Reserves(69, 5, "05/14/95"));
+    reserves.addElement(new Reserves(21, 5, "05/16/95"));
+    reserves.addElement(new Reserves(57, 2, "05/10/95"));
+    reserves.addElement(new Reserves(35, 3, "05/15/95"));
 
     boolean status = OK;
     int numsailors = 25;
@@ -48,164 +146,231 @@ class JoinsLab3Driver implements GlobalConst {
       System.err.println (""+e);
     }
 
-    //Build S.in
-    System.out.println("dir : "+DATA_DIR_PATH+"S.txt");
-    File2Heap(DATA_DIR_PATH+"S.txt", "S.in", (int)10000);
-    
-    //Build R.in database
-    File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 10000);
    
+    /*
+    ExtendedSystemDefs extSysDef = 
+      new ExtendedSystemDefs( "/tmp/minibase.jointestdb", "/tmp/joinlog",
+			      1000,500,200,"Clock");
+    */
+
+    SystemDefs sysdef = new SystemDefs( dbpath, 1000, NUMBUF, "Clock" );
+    
+    // creating the sailors relation
+    AttrType [] Stypes = new AttrType[4];
+    Stypes[0] = new AttrType (AttrType.attrInteger);
+    Stypes[1] = new AttrType (AttrType.attrString);
+    Stypes[2] = new AttrType (AttrType.attrInteger);
+    Stypes[3] = new AttrType (AttrType.attrReal);
+
+    //SOS
+    short [] Ssizes = new short [1];
+    Ssizes[0] = 30; //first elt. is 30
+    
+    Tuple t = new Tuple();
+    try {
+      t.setHdr((short) 4,Stypes, Ssizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    int size = t.size();
+    
+    // inserting the tuple into file "sailors"
+    RID             rid;
+    Heapfile        f = null;
+    try {
+      f = new Heapfile("sailors.in");
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Heapfile constructor ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    t = new Tuple(size);
+    try {
+      t.setHdr((short) 4, Stypes, Ssizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    for (int i=0; i<numsailors; i++) {
+      try {
+	t.setIntFld(1, ((Sailor)sailors.elementAt(i)).sid);
+	t.setStrFld(2, ((Sailor)sailors.elementAt(i)).sname);
+	t.setIntFld(3, ((Sailor)sailors.elementAt(i)).rating);
+	t.setFloFld(4, (float)((Sailor)sailors.elementAt(i)).age);
+      }
+      catch (Exception e) {
+	System.err.println("*** Heapfile error in Tuple.setStrFld() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }
+      
+      try {
+	rid = f.insertRecord(t.returnTupleByteArray());
+      }
+      catch (Exception e) {
+	System.err.println("*** error in Heapfile.insertRecord() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }      
+    }
+    if (status != OK) {
+      //bail out
+      System.err.println ("*** Error creating relation for sailors");
+      Runtime.getRuntime().exit(1);
+    }
+    
+    //creating the boats relation
+    AttrType [] Btypes = {
+      new AttrType(AttrType.attrInteger), 
+      new AttrType(AttrType.attrString), 
+      new AttrType(AttrType.attrString), 
+    };
+    
+    short  []  Bsizes = new short[2];
+    Bsizes[0] = 30;
+    Bsizes[1] = 20;
+    t = new Tuple();
+    try {
+      t.setHdr((short) 3,Btypes, Bsizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    size = t.size();
+    
+    // inserting the tuple into file "boats"
+    //RID             rid;
+    f = null;
+    try {
+      f = new Heapfile("boats.in");
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Heapfile constructor ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    t = new Tuple(size);
+    try {
+      t.setHdr((short) 3, Btypes, Bsizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    for (int i=0; i<numboats; i++) {
+      try {
+	t.setIntFld(1, ((Boats)boats.elementAt(i)).bid);
+	t.setStrFld(2, ((Boats)boats.elementAt(i)).bname);
+	t.setStrFld(3, ((Boats)boats.elementAt(i)).color);
+      }
+      catch (Exception e) {
+	System.err.println("*** error in Tuple.setStrFld() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }
+      
+      try {
+	rid = f.insertRecord(t.returnTupleByteArray());
+      }
+      catch (Exception e) {
+	System.err.println("*** error in Heapfile.insertRecord() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }      
+    }
+    if (status != OK) {
+      //bail out
+      System.err.println ("*** Error creating relation for boats");
+      Runtime.getRuntime().exit(1);
+    }
+    
+    //creating the boats relation
+    AttrType [] Rtypes = new AttrType[3];
+    Rtypes[0] = new AttrType (AttrType.attrInteger);
+    Rtypes[1] = new AttrType (AttrType.attrInteger);
+    Rtypes[2] = new AttrType (AttrType.attrString);
+
+    short [] Rsizes = new short [1];
+    Rsizes[0] = 15; 
+    t = new Tuple();
+    try {
+      t.setHdr((short) 3,Rtypes, Rsizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    size = t.size();
+    
+    // inserting the tuple into file "boats"
+    //RID             rid;
+    f = null;
+    try {
+      f = new Heapfile("reserves.in");
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Heapfile constructor ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    t = new Tuple(size);
+    try {
+      t.setHdr((short) 3, Rtypes, Rsizes);
+    }
+    catch (Exception e) {
+      System.err.println("*** error in Tuple.setHdr() ***");
+      status = FAIL;
+      e.printStackTrace();
+    }
+    
+    for (int i=0; i<numreserves; i++) {
+      try {
+	t.setIntFld(1, ((Reserves)reserves.elementAt(i)).sid);
+	t.setIntFld(2, ((Reserves)reserves.elementAt(i)).bid);
+	t.setStrFld(3, ((Reserves)reserves.elementAt(i)).date);
+
+      }
+      catch (Exception e) {
+	System.err.println("*** error in Tuple.setStrFld() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }      
+      
+      try {
+	rid = f.insertRecord(t.returnTupleByteArray());
+      }
+      catch (Exception e) {
+	System.err.println("*** error in Heapfile.insertRecord() ***");
+	status = FAIL;
+	e.printStackTrace();
+      }      
+    }
+    if (status != OK) {
+      //bail out
+      System.err.println ("*** Error creating relation for reserves");
+      Runtime.getRuntime().exit(1);
+    }
     
   }
   
- 
-  public boolean runTests() {
-    
-    Disclaimer();
-    Query1a();
-    //Query1();
-    
-    //Query2();
-    //Query3();
-    
-   
-    //Query4();
-    //Query5();
-    //Query6();
-    
-    
-    System.out.print ("Finished joins testing"+"\n");
-   
-    
-    return true;
-  }
-  private void CondExpr_Query1a(CondExpr[] outFilter, int operator, int outerSymbol, int innerSymbol) {
-	outFilter[0].next  = null;
-	outFilter[0].op    = new AttrOperator(operator);
-	outFilter[0].type1 = new AttrType(AttrType.attrSymbol);
-	outFilter[0].type2 = new AttrType(AttrType.attrSymbol);
-	outFilter[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),outerSymbol); // # of the column from the outer relation to use for selection
-	outFilter[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),innerSymbol); // # of the column from the inner relation to use for selection
-
-	outFilter[1] = null;
-}
- 
-  
-  private void Query1a() {
-	  System.out.print("**********************Query1a strating *********************\n");
-	    boolean status = OK;
-
-	    // Sailors, Boats, Reserves Queries.
-	    System.out.print 
-	      ("Query:"
-	      		+ "SELECT R.c1, S.c1"
-	      		+ "FROM   R, S"
-	      		+ "WHERE R.c3 < S.c3"
-	       + "using simple nested-loop join.)\n\n");
-	    
-	    
-	    CondExpr [] outFilter  = new CondExpr[2];
-		outFilter[0] = new CondExpr();
-		outFilter[1] = new CondExpr();
-		
-		//TODO : import values from txt file
-
-		CondExpr_Query1a(outFilter, 1, 3, 3 );
-		
-		Tuple t = new Tuple();
-		t = null;
-		AttrType Stypes[] = {
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger)
-		};
-		short[] Ssizes = null;
-		
-		AttrType [] Rtypes = {
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger)
-		};
-		short[] Rsizes = null;
-		FldSpec [] Sprojection = {
-				new FldSpec(new RelSpec(RelSpec.outer), 1),
-				new FldSpec(new RelSpec(RelSpec.outer), 2),
-				new FldSpec(new RelSpec(RelSpec.outer), 3),
-				new FldSpec(new RelSpec(RelSpec.outer), 4),
-		};
-		
-		//TODO : import values from txt file
-		FldSpec [] Projection = {
-				new FldSpec(new RelSpec(RelSpec.outer), 1),
-				new FldSpec(new RelSpec(RelSpec.innerRel), 1)
-		};
-	    
-		iterator.Iterator am = null;
-
-		try {
-			//TODO : implement from txt file
-			am = new FileScan("R.in", 
-					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
-		} catch (Exception e) {
-			status = FAIL;
-			System.err.println("" + e);
-		}
-
-		// Nested Loop Join
-		NestedLoopsJoins nlj = null;
-		try {
-			nlj = new NestedLoopsJoins (Stypes, 4, Ssizes,
-					Rtypes, 4, Rsizes,
-					10,
-					am, "S.in",
-					outFilter, null, Projection, 2);
-		}
-		catch (Exception e) {
-			System.err.println ("*** Error preparing for nested_loop_join");
-			System.err.println (""+e);
-			e.printStackTrace();
-			Runtime.getRuntime().exit(1);
-		}
-
-		AttrType[] jtype = { new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger),
-				new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger)};
-
-		t = null;
-		int i = 0;
-		PrintWriter pw;
-		try {
-			
-			pw = new PrintWriter("output_query1a.txt");
-			
-			while ((t = nlj.get_next()) != null) {
-				i++;
-				//t.print(jtype); // print results
-				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
-			}
-			pw.close();
-			// print the total number of returned tuples
-			System.out.println("Output Tuples for query 1a: " + i);
-		} catch (Exception e) {
-			System.err.println("" + e);
-			e.printStackTrace();
-			Runtime.getRuntime().exit(1);
-		}
-
-		try {
-			nlj.close();
-		} catch (Exception e) {
-			status = FAIL;
-			e.printStackTrace();
-		}
-
-		if (status != OK) {
-			//bail out
-			Runtime.getRuntime().exit(1);
-		}
-  }
-
   private boolean File2Heap(String fileNameInput, String fileNameOutput, int max_num_tuples){
 	     
 	    /**
@@ -316,6 +481,67 @@ class JoinsLab3Driver implements GlobalConst {
 	      return true;
 	      
 	}
+  
+  private  String[][] File2List(String myfile)  {
+		
+	BufferedReader abc;
+	try {
+		abc = new BufferedReader(new FileReader(myfile));
+	
+	int M=(int) abc.lines().count();
+	abc.close();
+	
+	int i=0;
+	
+	abc = new BufferedReader(new FileReader(myfile));
+	String [][] east ;
+	String line;
+	line = abc.readLine() + ","+ Integer.toString(0);
+
+	String[] dimes = line.split(",");
+	
+	int N=dimes.length;
+	
+	east= new String [M][N];
+	 
+	east[0]=dimes;
+	 
+	
+	for( i=1;i<M;i++) {
+	   line = abc.readLine();
+	   dimes = line.split(",");
+	   east[i]=dimes;	 
+	                   }
+	 abc.close();
+	
+	return east;}
+   catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		return null;
+	}
+	 
+	}
+  
+  public boolean runTests()  {
+    
+    Disclaimer();
+    Query1();
+    
+    Query2();
+    Query3();
+    
+   
+    Query4();
+    Query5();
+    Query6();
+    
+    
+    System.out.print ("Finished joins testing"+"\n");
+    
+    return true;
+  }
+
   private void Query1_CondExpr(CondExpr[] expr) {
 
     expr[0].next  = null;
@@ -1609,14 +1835,15 @@ class JoinsLab3Driver implements GlobalConst {
   }
 }
 
-public class Lab3Test
+public class JoinTest
 {
   public static void main(String argv[])
   {
     boolean sortstatus;
-    System.out.println("It comes here");
+    //SystemDefs global = new SystemDefs("bingjiedb", 100, 70, null);
+    //JavabaseDB.openDB("/tmp/nwangdb", 5000);
 
-    JoinsLab3Driver jjoin = new JoinsLab3Driver();
+    JoinsDriver jjoin = new JoinsDriver();
 
     sortstatus = jjoin.runTests();
     if (sortstatus != true) {
@@ -1625,5 +1852,7 @@ public class Lab3Test
     else {
       System.out.println("join tests completed successfully");
     }
+    
   }
 }
+

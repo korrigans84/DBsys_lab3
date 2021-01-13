@@ -744,7 +744,6 @@ class JoinsDriver implements GlobalConst {
       new AttrType(AttrType.attrInteger), 
       new AttrType(AttrType.attrReal)
     };
-
     AttrType [] Stypes2 = {
       new AttrType(AttrType.attrInteger), 
       new AttrType(AttrType.attrString), 
@@ -752,6 +751,7 @@ class JoinsDriver implements GlobalConst {
 
     short []   Ssizes = new short[1];
     Ssizes[0] = 30;
+    
     AttrType [] Rtypes = {
       new AttrType(AttrType.attrInteger), 
       new AttrType(AttrType.attrInteger), 
@@ -769,6 +769,8 @@ class JoinsDriver implements GlobalConst {
     short  []  Bsizes = new short[2];
     Bsizes[0] =30;
     Bsizes[1] =20;
+    
+    //sname, bid
     AttrType [] Jtypes = {
       new AttrType(AttrType.attrString), 
       new AttrType(AttrType.attrInteger), 
