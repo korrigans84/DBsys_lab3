@@ -63,7 +63,7 @@ class JoinsLab3Driver implements GlobalConst {
   public boolean runTests() {
     
     Disclaimer();
-    Query1a();
+    Query1a("query_1a.txt");
     //Query1();
     
     //Query2();
@@ -92,7 +92,7 @@ class JoinsLab3Driver implements GlobalConst {
 }
  
   
-  private void Query1a() {
+  private void Query1a(String queryFile) {
 	  System.out.print("**********************Query1a strating *********************\n");
 	    boolean status = OK;
 
@@ -109,9 +109,9 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[0] = new CondExpr();
 		outFilter[1] = new CondExpr();
 		
-		//TODO : import values from txt file
-
-		CondExpr_Query1a(outFilter, 1, 3, 3 );
+		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
+		
+		CondExpr_Query1a(outFilter, query.operator, query.col1ToCompare, query.col2ToCompare );
 		
 		Tuple t = new Tuple();
 		t = null;
@@ -137,17 +137,16 @@ class JoinsLab3Driver implements GlobalConst {
 				new FldSpec(new RelSpec(RelSpec.outer), 4),
 		};
 		
-		//TODO : import values from txt file
 		FldSpec [] Projection = {
-				new FldSpec(new RelSpec(RelSpec.outer), 1),
-				new FldSpec(new RelSpec(RelSpec.innerRel), 1)
+				new FldSpec(new RelSpec(RelSpec.outer), query.col1),
+				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
 		};
 	    
 		iterator.Iterator am = null;
 
 		try {
 			//TODO : implement from txt file
-			am = new FileScan("R.in", 
+			am = new FileScan(query.rel1+".in", 
 					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
 		} catch (Exception e) {
 			status = FAIL;
@@ -160,7 +159,7 @@ class JoinsLab3Driver implements GlobalConst {
 			nlj = new NestedLoopsJoins (Stypes, 4, Ssizes,
 					Rtypes, 4, Rsizes,
 					10,
-					am, "S.in",
+					am, query.rel2+".in",
 					outFilter, null, Projection, 2);
 		}
 		catch (Exception e) {
