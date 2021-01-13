@@ -403,9 +403,9 @@ class JoinsLab3Driver implements GlobalConst {
 		}
 
 		// Nested Loop Join
-		NestedLoopsJoins nlj = null;
+		SelfJoin sj = null;
 		try {
-			nlj = new NestedLoopsJoins (Stypes, 4, Ssizes,
+			sj = new SelfJoin (Stypes, 4, Ssizes,
 					Rtypes, 4, Rsizes,
 					10,
 					am, query.rel2+".in",
@@ -428,7 +428,7 @@ class JoinsLab3Driver implements GlobalConst {
 			
 			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
 			
-			while ((t = nlj.get_next()) != null) {
+			while ((t = sj.get_next()) != null) {
 				i++;
 				//t.print(jtype); // print results
 				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
@@ -443,7 +443,7 @@ class JoinsLab3Driver implements GlobalConst {
 		}
 
 		try {
-			nlj.close();
+			sj.close();
 		} catch (Exception e) {
 			status = FAIL;
 			e.printStackTrace();

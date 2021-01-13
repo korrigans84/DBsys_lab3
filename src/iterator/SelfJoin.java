@@ -23,7 +23,6 @@ public class SelfJoin extends Iterator{
 	private Tuple JTuple;
 	private int eqOff;
 	private Sort L1;
-	private Sort L2;
 	private ArrayList<Tuple> data, result;
 	
 	
@@ -78,18 +77,27 @@ public class SelfJoin extends Iterator{
 		//order to sort
 		if (outFilter[0].op.attrOperator == AttrOperator.aopGT || outFilter[0].op.attrOperator == AttrOperator.aopGE) {
 			TupleOrder order = new TupleOrder(TupleOrder.Ascending);
+			//sort
+			try {
+			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
+					(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+			}catch(SortException e) {
+				System.out.println("An error occured during sort of SelfJoin Method");
+			}
 			
 		} else{
+			
 			TupleOrder order = new TupleOrder(TupleOrder.Descending);
+			//sort
+			try {
+			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
+					(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+			}catch(SortException e) {
+				System.out.println("An error occured during sort of SelfJoin Method");
+			}
 		} 
 		
-		//sort
-		try {
-		L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
-				(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-		}catch(SortException e) {
-			System.out.println("An error occured during sort of SelfJoin Method");
-		}
+		
 		
 		
 		//offset or not
@@ -100,17 +108,17 @@ public class SelfJoin extends Iterator{
 		//initialization of the list of data, using arrayList
 		
 		data = new ArrayList<Tuple>();
+		result = new ArrayList<Tuple>();
 		
 
-		Tuple tuple = new Tuple();
+		Tuple tuple ;
 		try {
 			while ((tuple = L1.get_next()) != null)
 			{	
-				Tuple x = new Tuple(tuple); 
-				data.add(x);
+				data.add(tuple);
 			}
 		} catch (Exception e1) {
-&			e1.printStackTrace();
+			e1.printStackTrace();
 		}
 
 		for (int i=0; i<data.size(); i++) {
