@@ -64,6 +64,7 @@ class JoinsLab3Driver implements GlobalConst {
     
     Disclaimer();
     Query1a("query_1a.txt");
+    Query1b("query_1b.txt");
     //Query1();
     
     //Query2();
@@ -85,12 +86,28 @@ class JoinsLab3Driver implements GlobalConst {
 	outFilter[0].op    = new AttrOperator(operator);
 	outFilter[0].type1 = new AttrType(AttrType.attrSymbol);
 	outFilter[0].type2 = new AttrType(AttrType.attrSymbol);
-	outFilter[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),outerSymbol); // # of the column from the outer relation to use for selection
-	outFilter[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),innerSymbol); // # of the column from the inner relation to use for selection
+	outFilter[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),outerSymbol);
+	outFilter[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),innerSymbol);
 
 	outFilter[1] = null;
 }
- 
+  private void CondExpr_Query1b(CondExpr[] outFilter, int operator, int outerSymbol, int innerSymbol, int outer2Symbol, int inner2Symbol, int operator2  ) {
+	outFilter[0].next  = null;
+	outFilter[0].op    = new AttrOperator(operator);
+	outFilter[0].type1 = new AttrType(AttrType.attrSymbol);
+	outFilter[0].type2 = new AttrType(AttrType.attrSymbol);
+	outFilter[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),outerSymbol);
+	outFilter[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),innerSymbol);
+
+	outFilter[1].next  = null;
+	outFilter[1].op    = new AttrOperator(operator2);
+	outFilter[1].type1 = new AttrType(AttrType.attrSymbol);
+	outFilter[1].type2 = new AttrType(AttrType.attrSymbol);
+	outFilter[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),outer2Symbol);
+	outFilter[1].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),inner2Symbol);
+
+	outFilter[2] = null;
+	}
   
   private void Query1a(String queryFile) {
 	  System.out.print("**********************Query1a strating *********************\n");
@@ -98,10 +115,10 @@ class JoinsLab3Driver implements GlobalConst {
 
 	    // Sailors, Boats, Reserves Queries.
 	    System.out.print 
-	      ("Query:"
-	      		+ "SELECT R.c1, S.c1"
-	      		+ "FROM   R, S"
-	      		+ "WHERE R.c3 < S.c3"
+	      ("Query:\n"
+	      		+ "SELECT R.c1, S.c1\n"
+	      		+ "FROM   R, S\n"
+	      		+ "WHERE R.c3 < S.c3\n"
 	       + "using simple nested-loop join.)\n\n");
 	    
 	    
@@ -206,6 +223,126 @@ class JoinsLab3Driver implements GlobalConst {
 		}
   }
 
+  private void Query1b(String queryFile) {
+	  System.out.print("**********************Query1b starting *********************\n");
+	    boolean status = OK;
+
+	    // Sailors, Boats, Reserves Queries.
+	    System.out.print 
+	      ("Query:\n"
+	      		+ "SELECT R.c1, S.c1\n"
+	      		+ "FROM   R, S\n"
+	      		+ "WHERE R.c3 < S.c3\n"
+	      		+ "AND\n"
+	      		+ "R.c4 <= S.c4\n"
+	      		
+	       + "using simple nested-loop join.)\n\n");
+	    
+	    
+	    CondExpr [] outFilter  = new CondExpr[3];
+		outFilter[0] = new CondExpr();
+		outFilter[1] = new CondExpr();
+		outFilter[2] = new CondExpr();
+		
+		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
+		
+		CondExpr_Query1b(
+				outFilter, 
+				query.operator, query.col1ToCompare, query.col2ToCompare,  
+				query.operator2, query.col1ToCompare2, query.col2ToCompare2);
+		
+		Tuple t = new Tuple();
+		t = null;
+		AttrType Stypes[] = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Ssizes = null;
+		
+		AttrType [] Rtypes = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Rsizes = null;
+		FldSpec [] Sprojection = {
+				new FldSpec(new RelSpec(RelSpec.outer), 1),
+				new FldSpec(new RelSpec(RelSpec.outer), 2),
+				new FldSpec(new RelSpec(RelSpec.outer), 3),
+				new FldSpec(new RelSpec(RelSpec.outer), 4),
+		};
+		
+		FldSpec [] Projection = {
+				new FldSpec(new RelSpec(RelSpec.outer), query.col1),
+				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
+		};
+	    
+		iterator.Iterator am = null;
+
+		try {
+			//TODO : implement from txt file
+			am = new FileScan(query.rel1+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+		} catch (Exception e) {
+			status = FAIL;
+			System.err.println("" + e);
+		}
+
+		// Nested Loop Join
+		NestedLoopsJoins nlj = null;
+		try {
+			nlj = new NestedLoopsJoins (Stypes, 4, Ssizes,
+					Rtypes, 4, Rsizes,
+					10,
+					am, query.rel2+".in",
+					outFilter, null, Projection, 2);
+		}
+		catch (Exception e) {
+			System.err.println ("*** Error preparing for nested_loop_join");
+			System.err.println (""+e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		AttrType[] jtype = { new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger)};
+
+		t = null;
+		int i = 0;
+		PrintWriter pw;
+		try {
+			
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query1b.txt");
+			
+			while ((t = nlj.get_next()) != null) {
+				i++;
+				//t.print(jtype); // print results
+				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
+			}
+			pw.close();
+			// print the total number of returned tuples
+			System.out.println("Output Tuples for query 1b: " + i);
+		} catch (Exception e) {
+			System.err.println("" + e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		try {
+			nlj.close();
+		} catch (Exception e) {
+			status = FAIL;
+			e.printStackTrace();
+		}
+
+		if (status != OK) {
+			//bail out
+			Runtime.getRuntime().exit(1);
+		}
+  }
   private boolean File2Heap(String fileNameInput, String fileNameOutput, int max_num_tuples){
 	     
 	    /**
