@@ -40,11 +40,6 @@ public class IEJoin extends Iterator{
 			   int        n_out_flds
 			) throws Exception {
 		
-		
-		outer = am1;
-		outer2 = am1_copy;
-		outer3 = am2;
-		outer4= am2_copy;
 		/*
 		 * Init of the Jtuple for the result
 		 */
@@ -74,74 +69,47 @@ public class IEJoin extends Iterator{
 		 * if (op 1 ∈ {>, ≥}) sort L 1 , L 0 1 in descending order		
 		 ***************************************************************************************/
 		
-		
+		TupleOrder order;
 		if (outFilter[0].op.attrOperator == AttrOperator.aopGT || outFilter[0].op.attrOperator == AttrOperator.aopGE) {
-			TupleOrder order = new TupleOrder(TupleOrder.Ascending);
-			//sort
-			try {
-			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-
-			L1_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am2, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-			}catch(SortException e) {
-				System.out.println("An error occured during sort of SelfJoin Method");
-			}
-			
-
+			order = new TupleOrder(TupleOrder.Ascending);
 			/***************************************************************************************
 		 							else if (op 1 ∈ {<, ≤}) sort L1, L'1 in descending order	
 			 ***************************************************************************************/
 		} else{
-			
-			TupleOrder order = new TupleOrder(TupleOrder.Descending);
-			//sort
-			try {
-			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-			L1_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am2, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-			}catch(SortException e) {
-				System.out.println("An error occured during sort of SelfJoin Method");
-			}
+			order = new TupleOrder(TupleOrder.Descending);
+		}
+
+		try {
+		L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
+				(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+		L1_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
+				(iterator.Iterator) am2, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+		}catch(SortException e) {
+			System.out.println("An error occured during sort of SelfJoin Method");
 		}
 
 		/***************************************************************************************
 		 * if (op 2 ∈ {>, ≥}) sort L 2 , L'2 in descending order		
 		 ***************************************************************************************/
-		
-		
+		TupleOrder order2;
 		if (outFilter[1].op.attrOperator == AttrOperator.aopGT || outFilter[1].op.attrOperator == AttrOperator.aopGE) {
-			TupleOrder order = new TupleOrder(TupleOrder.Ascending);
-			//sort
-			try {
-			L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am1_copy, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-
-			L2_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am2_copy, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
-			}catch(SortException e) {
-				System.out.println("An error occured during sort of SelfJoin Method");
-			}
-			
+			order2 = new TupleOrder(TupleOrder.Ascending);	
 
 			/***************************************************************************************
 		 							else if (op 2 ∈ {<, ≤}) sort L2, L'2 in descending order	
 			 ***************************************************************************************/
-		} else{
-			
-			TupleOrder order = new TupleOrder(TupleOrder.Descending);
-			//sort
-			try {
+		} else{			
+			order2 = new TupleOrder(TupleOrder.Descending);
+		}
+		
+		try {
 			L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am1_copy, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+					(iterator.Iterator) am1_copy, outFilter[0].operand1.symbol.offset, order2, 0, amt_of_mem);
 			L2_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am2_copy, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+					(iterator.Iterator) am2_copy, outFilter[0].operand1.symbol.offset, order2, 0, amt_of_mem);
 			}catch(SortException e) {
 				System.out.println("An error occured during sort of SelfJoin Method");
 			}
-		}
-
 		/***************************************************************************************
 	 							Conversion of Iterators to arrays
 		 ***************************************************************************************/
@@ -175,6 +143,7 @@ public class IEJoin extends Iterator{
 		}
 		L2_prim.close();
 		
+
 		int M = L1_array.size();
 		int N = L1_prim_array.size();
 		/***************************************************************************************
@@ -185,9 +154,11 @@ public class IEJoin extends Iterator{
 			for(int j=0; j<M; j++) {
 				if(TupleUtils.Equal(L1_array.get(i), L2_array.get(j), in1, len_in1)) {
 					P[i] = j;
+					break;
 				}
 			}
 		}
+		
 		/***************************************************************************************
 			compute the permutation array P 0 of L 0 2 w.r.t. L 0 1		 
 		***************************************************************************************/
@@ -196,19 +167,24 @@ public class IEJoin extends Iterator{
 				for(int j=0; j<N; j++) {
 					if(TupleUtils.Equal(L1_prim_array.get(i), L2_prim_array.get(j), in1, len_in1)) {
 						P_prim[j] = i;
+						break;
 				}
 			}
 		}
-			
 
 		/***************************************************************************************
 			compute the offset array O 1 of L 1 w.r.t. L 0 1		
 		***************************************************************************************/
 			int[] O_1 = new int[M];
+			
 			for(int i=0; i<M; i++) {
 				for(int j=0; j<N; j++) {
-					if(TupleUtils.Equal(L1_array.get(i), L1_prim_array.get(j), in1, len_in1)) {
+					if(TupleUtils.CompareTupleWithTuple(
+							new AttrType(AttrType.attrInteger), 
+							L1_array.get(i), proj_list[0].offset, 
+							L1_prim_array.get(j), proj_list[1].offset)>=0) {
 						O_1[i] = j;
+						break;
 					}
 				}
 			}
@@ -219,14 +195,18 @@ public class IEJoin extends Iterator{
 			int[] O_2 = new int[M];
 			for(int i=0; i<M; i++) {
 				for(int j=0; j<N; j++) {
-					if(TupleUtils.Equal(L2_array.get(i), L2_prim_array.get(j), in1, len_in1)) {
+					if(TupleUtils.CompareTupleWithTuple(
+							new AttrType(AttrType.attrInteger),
+							L2_array.get(i), proj_list[0].offset, 
+							L2_prim_array.get(j), proj_list[1].offset)>=0) {
 						O_2[i] = j;
+						break;
 					}
 				}
 			}
 
 			/***************************************************************************************
-				initialize bit-array B 0 (|B 0 | = n), and set all bits to 0		 
+			*	initialize bit-array B 0 (|B 0 | = n), and set all bits to 0		 
 			***************************************************************************************/
 			int[] B_prim = new int[N];
 			Arrays.fill(B_prim, 0);
@@ -234,7 +214,7 @@ public class IEJoin extends Iterator{
 			
 			/***************************************************************************************	
 			 * 					if (op 1 ∈ {≤, ≥} and op 2 ∈ {≤, ≥}) eqOff = 0
-								else eqOff = 1
+			 *					else eqOff = 1
 			 ***************************************************************************************/
 			int eqOff;
 			if (
@@ -284,10 +264,6 @@ public class IEJoin extends Iterator{
 	    if (!closeFlag) {
 			
 			try {
-			  outer.close();
-			  outer2.close();
-			  outer3.close();
-			  outer4.close();
 			}catch (Exception e) {
 			  throw new JoinsException(e, "SelfJoin.java: error in closing iterator.");
 			}

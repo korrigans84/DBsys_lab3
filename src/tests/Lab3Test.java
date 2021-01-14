@@ -58,15 +58,14 @@ class JoinsLab3Driver implements GlobalConst {
     File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 100);
     
     //Build Q.in database
-    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 100);
+    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 500);
    
   }
   
  
   public boolean runTests() {
-    
-    Disclaimer();
-    //Query1b("query_2b.txt");
+   
+    Query1b("query_2b.txt");
 
     //Query2b("query_2b.txt");
    //Query1b("query_2b.txt");
