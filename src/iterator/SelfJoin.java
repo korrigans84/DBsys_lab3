@@ -2,6 +2,7 @@ package iterator;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import bufmgr.PageNotReadException;
 import global.AttrOperator;
@@ -23,7 +24,7 @@ public class SelfJoin extends Iterator{
 	private int eqOff;
 	private Sort L1;
 	private Sort L2;
-	private ArrayList<Tuple> data, secondData, result;
+	private ArrayList<Tuple> L1_array, L2_array, result;
 	
 	
 	  /**constructor
@@ -43,6 +44,8 @@ public class SelfJoin extends Iterator{
 	   *@param n_out_flds number of outer relation fileds
 	   *@exception IOException some I/O fault
 	   *@exception NestedLoopException exception from this class
+	 * @throws TupleUtilsException 
+	 * @throws UnknowAttrType 
 	   */
 	public SelfJoin( AttrType    in1[],    
 			   int     len_in1,           
@@ -57,27 +60,27 @@ public class SelfJoin extends Iterator{
 			   CondExpr outFilter[],      
 			   CondExpr rightFilter[],    
 			   FldSpec   proj_list[],
-			   int        n_out_flds, 
-			   int conditions
-			   ) throws IOException,NestedLoopException {
-		
+			   int        n_out_flds
+			   ) throws IOException,NestedLoopException, UnknowAttrType, TupleUtilsException {
 		//Setup for close call
 		outer=am1;
 		outer2=am2;
-		//Setupp of the JTuple 
+		//Setup of the JTuple 
 		
-		try {
-			JTuple = new Tuple();
-			AttrType[] Jtypes = new AttrType[n_out_flds];
-			TupleUtils.setup_op_tuple(JTuple, Jtypes,
-					in1, len_in1, in1, len_in1,
-					t1_str_sizes, t1_str_sizes,
-					proj_list, n_out_flds);
-		}catch (TupleUtilsException e){
-			throw new NestedLoopException(e, e.getMessage());
-		}
 		
-		//order to sort
+
+		/***************************************************************************************
+		 * 
+		 *								Start of the IESelfJoin algorithm	
+		 *
+		 ***************************************************************************************/
+		
+
+		/***************************************************************************************
+	 							if (op 1 ∈ {>, ≥}) sort L 1 in ascending order		
+		 ***************************************************************************************/
+		
+		
 		if (outFilter[0].op.attrOperator == AttrOperator.aopGT || outFilter[0].op.attrOperator == AttrOperator.aopGE) {
 			TupleOrder order = new TupleOrder(TupleOrder.Ascending);
 			//sort
@@ -88,6 +91,10 @@ public class SelfJoin extends Iterator{
 				System.out.println("An error occured during sort of SelfJoin Method");
 			}
 			
+
+			/***************************************************************************************
+		 							else if (op 1 ∈ {<, ≤}) sort L 1 in descending order	
+			 ***************************************************************************************/
 		} else{
 			
 			TupleOrder order = new TupleOrder(TupleOrder.Descending);
@@ -101,116 +108,152 @@ public class SelfJoin extends Iterator{
 		}
 		
 		
-		data = new ArrayList<Tuple>();
+		//we put L1 in a array to access Tuples more than once
+		L1_array = new ArrayList<Tuple>();
 		Tuple tuple ;
 		try {
 			while ((tuple = L1.get_next()) != null)
 			{	
-				data.add(tuple);
+				L1_array.add(new Tuple(tuple));
 			}
 			L1.close();
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 		
-		if (conditions == 2 ) {
+		
+		//if we have 2 conditions
+		if (am1 != null ) {
 			try {
-				// inner table sorted to get L2 iterator
+				
+
+				/***************************************************************************************
+								if (op 2 ∈ {>, ≥}) sort L 2 in descending order
+				 ***************************************************************************************/
 				if (outFilter[1].op.attrOperator == AttrOperator.aopGT || outFilter[1].op.attrOperator == AttrOperator.aopGE) {
 
 					TupleOrder order = new TupleOrder(TupleOrder.Descending);
 					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, t1_str_sizes[0], amt_of_mem);
-				} else if (outFilter[1].op.attrOperator == AttrOperator.aopLT || outFilter[1].op.attrOperator == AttrOperator.aopLE)
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 0, amt_of_mem);
+				} 
+				
+
+				/***************************************************************************************
+				 * 				else if (op 2 ∈ {<, ≤}) sort L 2 in ascending order
+				 ***************************************************************************************/
+				
+				else if (outFilter[1].op.attrOperator == AttrOperator.aopLT || outFilter[1].op.attrOperator == AttrOperator.aopLE)
 				{
 
 					TupleOrder order = new TupleOrder(TupleOrder.Ascending);
 					
 					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 10, amt_of_mem);
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 0, amt_of_mem);
 
 				} else {
 					System.out.println("Unknown operand");
 				}
+				
 			} catch (SortException | IOException e) {
 				e.printStackTrace();
 			}
 			
-			secondData = new ArrayList<Tuple>();
+			
+			//We use an array
+			L2_array = new ArrayList<Tuple>();
 			try {
 				while ((tuple = L2.get_next()) != null)
 				{	
-					secondData.add(tuple);
+					L2_array.add(new Tuple(tuple));
 				}
 				L2.close();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			int N = 0;
-			N = data.size();
-
-			int[] P = new int[N];
-			int[] B = new int[N]; // Bit array
-			
-			int i = 0;
-			for (Tuple tupleFromSecondData : secondData) {
-				int j = 0;
-				for (Tuple tupleFromData: data) {
-					try {
-						if (areEquals(tupleFromSecondData, tupleFromData)) {
-							P[i] = j;
-							break;
-						}
-					} catch (FieldNumberOutOfBoundException | IOException e) {
-						e.printStackTrace();
-					}
-					j++;
-				}
-				B[i] = 0;
-				i++;
-			}
 		}
 
 		
+
 		
+		//initialization of the list of data, using arrayList
 		
+		int N = L1_array.size();
 		
-		//offset or not
-		if (outFilter[0].op.toString() == "aopGE" || outFilter[0].op.toString() == "aopLE")
+
+		/***************************************************************************************
+		 * 						compute the permutation array P of L 2 w.r.t. L 1
+		 ***************************************************************************************/
+		//compute of permutation
+		int[] P = new int[N];
+
+		for(int i=0; i<N; i++) {
+			for(int j=0; j<N; j++) {
+				if(TupleUtils.Equal(L1_array.get(i), L2_array.get(j), in1, len_in1)) {
+					P[i] = j;
+				}
+			}
+		}
+		
+
+		/***************************************************************************************
+		 *								Declaration of Objects required &&
+		 *						initialize bit-array B (|B| = n), and set all bits to 0
+		 *						initialize join result as an empty list for tuple pairs
+		 ***************************************************************************************/
+		int[] B = new int[N]; // Bit array
+		Arrays.fill(B, 0);
+		try {
+			JTuple = new Tuple();
+			AttrType[] Jtypes = new AttrType[n_out_flds];
+			TupleUtils.setup_op_tuple(JTuple, Jtypes,
+					in1, len_in1, in1, len_in1,
+					t1_str_sizes, t1_str_sizes,
+					proj_list, n_out_flds);
+			
+			
+		}catch (TupleUtilsException e){
+			throw new NestedLoopException(e, e.getMessage());
+		}
+
+		result = new ArrayList<Tuple>();
+		
+		/***************************************************************************************	
+		 * 					if (op 1 ∈ {≤, ≥} and op 2 ∈ {≤, ≥}) eqOff = 0
+							else eqOff = 1
+		 ***************************************************************************************/
+		if (
+				(outFilter[0].op.attrOperator == AttrOperator.aopGE || outFilter[0].op.attrOperator == AttrOperator.aopLE) 
+				&&
+				(outFilter[1].op.attrOperator == AttrOperator.aopGE || outFilter[1].op.attrOperator == AttrOperator.aopLE)
+				)
 			eqOff=0;
 		else
 			eqOff=1;
-		//initialization of the list of data, using arrayList
 		
-		result = new ArrayList<Tuple>();
-		
-		for (int i=0; i<data.size(); i++) {
-			for (int j=0; j <= i-1+eqOff; j++) {
-				try {
-					Tuple t1 = data.get(i);
-					Tuple t2 = data.get(j);
-					Projection.Join(t1, in1, 
-							t2, in1, 
-							JTuple, proj_list, n_out_flds);
-
-					Tuple jtuple = new Tuple(JTuple);
-					result.add(jtuple);
-
-				} catch (Exception e) {
-					e.printStackTrace();
+		/***************************************************************************************	
+		 * 					loop for of the algorithm
+		 ***************************************************************************************/
+		try {
+			for(int i=0; i<N; i++) {
+				int pos = P[i];
+				B[pos]=1;
+				for(int j= pos+eqOff; j<N; j++) {
+					if(B[j] == 1) {
+						Projection.Join(L1_array.get(j), in1, 
+										L1_array.get(P[i]), in1, 
+										JTuple, proj_list, n_out_flds);
+							
+						result.add(new Tuple(JTuple));
+					}
 				}
 			}
-		}	
-	}
-		
-
-		public boolean areEquals(Tuple T1, Tuple T2) throws FieldNumberOutOfBoundException, IOException {
-			return (T1.getIntFld(1) == T2.getIntFld(1) &&
-				T1.getIntFld(2) == T2.getIntFld(2) &&
-				T1.getIntFld(3) == T2.getIntFld(3) &&
-				T1.getIntFld(4) == T2.getIntFld(4));
+		} catch (UnknowAttrType | FieldNumberOutOfBoundException | IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 		}
+	}
 	@Override
+	
 	public Tuple get_next() throws IOException, JoinsException, IndexException, InvalidTupleSizeException,
 			InvalidTypeException, PageNotReadException, TupleUtilsException, PredEvalException, SortException,
 			LowMemException, UnknowAttrType, UnknownKeyTypeException, Exception {
@@ -227,8 +270,8 @@ public class SelfJoin extends Iterator{
 	      if (!closeFlag) {
 		
 		try {
-			data.clear();
-			secondData.clear();
+			L1_array.clear();
+			L2_array.clear();
 		  outer.close();
 		  outer2.close();
 		}catch (Exception e) {

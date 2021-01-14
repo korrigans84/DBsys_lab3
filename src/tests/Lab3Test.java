@@ -58,7 +58,7 @@ class JoinsLab3Driver implements GlobalConst {
     File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 100);
     
     //Build Q.in database
-    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 1000);
+    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 100);
    
   }
   
@@ -66,12 +66,12 @@ class JoinsLab3Driver implements GlobalConst {
   public boolean runTests() {
     
     Disclaimer();
-   // Query1a("query_1a.txt");
-   Query1b("query_2b.txt");
+    //Query1b("query_2b.txt");
+
+    Query2b("query_2b.txt");
+   //Query1b("query_2b.txt");
 
     //Query2a("query_2a.txt");
-    int data_len=100;
-    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
     //Query2b("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
@@ -160,7 +160,6 @@ class JoinsLab3Driver implements GlobalConst {
 		iterator.Iterator am = null;
 
 		try {
-			//TODO : implement from txt file
 			am = new FileScan(query.rel1+".in", 
 					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
 		} catch (Exception e) {
@@ -245,7 +244,7 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[2] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		System.out.println("Table : "+query.rel1);
+		
 		CondExpr_Query1b(
 				outFilter, 
 				query.operator, query.col1ToCompare, query.col2ToCompare,  
@@ -354,7 +353,7 @@ class JoinsLab3Driver implements GlobalConst {
 	      		+ "SELECT Q.c1, Q2.c1 \n"
 	      		+ "FROM   Q, Q as Q2\n"
 	      		+ "WHERE Q.c3 < Q2.c3\n"
-	       + "using self join.)\n\n");
+	       + "using self join.\n\n");
 	    
 	    
 	    CondExpr [] outFilter  = new CondExpr[2];
@@ -397,7 +396,6 @@ class JoinsLab3Driver implements GlobalConst {
 		iterator.Iterator am = null;
 
 		try {
-			//TODO : implement from txt file
 			am = new FileScan(query.rel1+".in", 
 					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
 		} catch (Exception e) {
@@ -405,7 +403,7 @@ class JoinsLab3Driver implements GlobalConst {
 			System.err.println("" + e);
 		}
 
-		// Nested Loop Join
+		// IESelfJoin
 		SelfJoin sj = null;
 		try {
 			sj = new SelfJoin (Stypes, 4, Ssizes,
@@ -414,8 +412,7 @@ class JoinsLab3Driver implements GlobalConst {
 					am, 
 					null,
 					query.rel2+".in",
-					outFilter, null, Projection, 2,
-					1
+					outFilter, null, Projection, 2
 					);
 		}
 		catch (Exception e) {
@@ -463,7 +460,7 @@ class JoinsLab3Driver implements GlobalConst {
   }
   
   private void Query2b(String queryFile) {
-	  System.out.print("**********************Query2b string *********************\n");
+	  System.out.print("**********************Query2b starting *********************\n");
 	    boolean status = OK;
 
 	    // Sailors, Boats, Reserves Queries.
@@ -474,7 +471,7 @@ class JoinsLab3Driver implements GlobalConst {
 		      		+ "WHERE Q.c3 <= Q2.c3\n"
 	      		+ "AND\n"
 	      		+ "Q.c4 < Q.c4\n"
-	       + "using self join.)\n\n");
+	       + "using self join.\n\n");
 	    
 	    
 	    
@@ -520,80 +517,74 @@ class JoinsLab3Driver implements GlobalConst {
 		};
 		
 		clear_csv();
-	    for (int data_len=1000; data_len<=2000; data_len+=100)
-	    {
-		    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
-		    
-			iterator.Iterator am = null;
-			iterator.Iterator am2 = null;
+	    
+		iterator.Iterator am = null;
+		iterator.Iterator am2 = null;
+		
+		try {
+			am = new FileScan(query.rel1+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+			am2 = new FileScan(query.rel1+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+		} catch (Exception e) {
+			status = FAIL;
+			System.err.println("" + e);
+		}
+
+		long timeStart = System.currentTimeMillis();
+		SelfJoin sj = null;
+		try {
+			sj = new SelfJoin (Stypes, 4, Ssizes,
+					Rtypes, 4, Rsizes,
+					10,
+					am,
+					am2,
+					query.rel2+".in",
+					outFilter, null, Projection, 2);
+		}
+		catch (Exception e) {
+			System.err.println ("*** Error preparing for Self Join");
+			System.err.println (""+e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		t = null;
+		int i = 0;
+		PrintWriter pw;
+		try {
 			
-			try {
-				am = new FileScan(query.rel1+".in", 
-						Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
-				am2 = new FileScan(query.rel1+".in", 
-						Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
-			} catch (Exception e) {
-				status = FAIL;
-				System.err.println("" + e);
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
+			
+			while ((t = sj.get_next()) != null) {
+				i++;
+				//t.print(jtype); // print results
+				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
 			}
-	
-			long timeStart = System.currentTimeMillis();
-			SelfJoin sj = null;
-			try {
-				sj = new SelfJoin (Stypes, 4, Ssizes,
-						Rtypes, 4, Rsizes,
-						10,
-						am,
-						am2,
-						query.rel2+".in",
-						outFilter, null, Projection, 2, 2);
-			}
-			catch (Exception e) {
-				System.err.println ("*** Error preparing for Self Join");
-				System.err.println (""+e);
-				e.printStackTrace();
-				Runtime.getRuntime().exit(1);
-			}
-	
-			AttrType[] jtype = { new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger),
-					new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger)};
-	
-			t = null;
-			int i = 0;
-			PrintWriter pw;
-			try {
-				
-				pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
-				
-				while ((t = sj.get_next()) != null) {
-					i++;
-					//t.print(jtype); // print results
-					pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
-				}
-				pw.close();
-				// print the total number of returned tuples
-				System.out.println("Output Tuples for query 2a: " + i);
-			} catch (Exception e) {
-				System.err.println("" + e);
-				e.printStackTrace();
-				Runtime.getRuntime().exit(1);
-			}
-	
-			try {
-				sj.close();
-				
-				write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
-				System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
-			} catch (Exception e) {
-				status = FAIL;
-				e.printStackTrace();
-			}
-	
-			if (status != OK) {
-				//bail out
-				Runtime.getRuntime().exit(1);
-			}
-	    }
+			pw.close();
+			// print the total number of returned tuples
+			System.out.println("Output Tuples for query 2b: " + i);
+		} catch (Exception e) {
+			System.err.println("" + e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		try {
+			sj.close();
+			
+			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
+			System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
+		} catch (Exception e) {
+			status = FAIL;
+			e.printStackTrace();
+		}
+
+		if (status != OK) {
+			//bail out
+			Runtime.getRuntime().exit(1);
+		}
+	   
   }
   private void clear_csv() {
 	  File csv = new File(DATA_DIR_PATH+"time.csv");
