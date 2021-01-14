@@ -519,10 +519,9 @@ class JoinsLab3Driver implements GlobalConst {
 				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
 		};
 		
-
-	    for (int data_len=100; data_len<300; data_len+=100)
+		clear_csv();
+	    for (int data_len=1000; data_len<=2000; data_len+=100)
 	    {
-		    System.out.println("Number of data in Q.in : " + data_len);
 		    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
 		    
 			iterator.Iterator am = null;
@@ -582,7 +581,9 @@ class JoinsLab3Driver implements GlobalConst {
 	
 			try {
 				sj.close();
-				System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms");
+				
+				write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
+				System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
 			} catch (Exception e) {
 				status = FAIL;
 				e.printStackTrace();
@@ -593,6 +594,21 @@ class JoinsLab3Driver implements GlobalConst {
 				Runtime.getRuntime().exit(1);
 			}
 	    }
+  }
+  private void clear_csv() {
+	  File csv = new File(DATA_DIR_PATH+"time.csv");
+	  csv.delete();
+  }
+  private void write_time_to_csv(int data_len, long time) 
+  {
+	  try {
+		FileWriter csv = new FileWriter(DATA_DIR_PATH+"time.csv", true);
+		
+		csv.write(data_len + "," + time + "\n");
+		csv.close();
+	} catch (IOException e) {
+		System.out.println("Enable to write result time in csv");
+	}
   }
   private boolean File2Heap(String fileNameInput, String fileNameOutput, int max_num_tuples){
 	     

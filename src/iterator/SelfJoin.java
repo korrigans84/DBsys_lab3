@@ -17,7 +17,7 @@ public class SelfJoin extends Iterator{
 	
 	
 	private Tuple[] results;
-	private Iterator outer;
+	private Iterator outer, outer2;
 	private TupleOrder order;
 	private Tuple JTuple;
 	private int eqOff;
@@ -63,6 +63,7 @@ public class SelfJoin extends Iterator{
 		
 		//Setup for close call
 		outer=am1;
+		outer2=am2;
 		//Setupp of the JTuple 
 		
 		try {
@@ -227,7 +228,10 @@ public class SelfJoin extends Iterator{
 	      if (!closeFlag) {
 		
 		try {
+			L1.close();
+			L2.close();
 		  outer.close();
+		  outer2.close();
 		}catch (Exception e) {
 		  throw new JoinsException(e, "NestedLoopsJoin.java: error in closing iterator.");
 		}
