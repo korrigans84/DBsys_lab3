@@ -17,7 +17,7 @@ public class SelfJoin extends Iterator{
 	
 	
 	private Tuple[] results;
-	private Iterator outer;
+	private Iterator outer, outer2;
 	private TupleOrder order;
 	private Tuple JTuple;
 	private int eqOff;
@@ -63,6 +63,7 @@ public class SelfJoin extends Iterator{
 		
 		//Setup for close call
 		outer=am1;
+		outer2=am2;
 		//Setupp of the JTuple 
 		
 		try {
@@ -107,6 +108,7 @@ public class SelfJoin extends Iterator{
 			{	
 				data.add(tuple);
 			}
+			L1.close();
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
@@ -140,6 +142,7 @@ public class SelfJoin extends Iterator{
 				{	
 					secondData.add(tuple);
 				}
+				L2.close();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
@@ -181,9 +184,6 @@ public class SelfJoin extends Iterator{
 		
 		result = new ArrayList<Tuple>();
 		
-
-		
-
 		for (int i=0; i<data.size(); i++) {
 			for (int j=0; j <= i-1+eqOff; j++) {
 				try {
@@ -227,9 +227,12 @@ public class SelfJoin extends Iterator{
 	      if (!closeFlag) {
 		
 		try {
+			data.clear();
+			secondData.clear();
 		  outer.close();
+		  outer2.close();
 		}catch (Exception e) {
-		  throw new JoinsException(e, "NestedLoopsJoin.java: error in closing iterator.");
+		  throw new JoinsException(e, "SelfJoin.java: error in closing iterator.");
 		}
 		closeFlag = true;
 	      }
