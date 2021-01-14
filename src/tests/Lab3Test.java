@@ -1,4 +1,4 @@
-package tests;
+	package tests;
 
 import iterator.*;
 import heap.*;
@@ -68,11 +68,12 @@ class JoinsLab3Driver implements GlobalConst {
     Disclaimer();
     //Query1b("query_2b.txt");
 
-    Query2b("query_2b.txt");
+    //Query2b("query_2b.txt");
    //Query1b("query_2b.txt");
 
     //Query2a("query_2a.txt");
     //Query2b("query_2b.txt");
+    Query2c("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -584,7 +585,133 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+		
 	   
+  }
+  
+  private void Query2c(String queryFile) {
+	  System.out.print("**********************Query2c starting *********************\n");
+	    boolean status = OK;
+	    
+	    
+	    
+	    CondExpr [] outFilter  = new CondExpr[3];
+		outFilter[0] = new CondExpr();
+		outFilter[1] = new CondExpr();
+		outFilter[2] = new CondExpr();
+		
+		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
+		
+		CondExpr_Query1b(
+				outFilter, 
+				query.operator, query.col1ToCompare, query.col2ToCompare,  
+				query.operator2, query.col1ToCompare2, query.col2ToCompare2);
+		
+		Tuple t = new Tuple();
+		t = null;
+		AttrType Stypes[] = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Ssizes = null;
+		
+		AttrType [] Rtypes = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Rsizes = null;
+		FldSpec [] Sprojection = {
+				new FldSpec(new RelSpec(RelSpec.outer), 1),
+				new FldSpec(new RelSpec(RelSpec.outer), 2),
+				new FldSpec(new RelSpec(RelSpec.outer), 3),
+				new FldSpec(new RelSpec(RelSpec.outer), 4),
+		};
+		
+		FldSpec [] Projection = {
+				new FldSpec(new RelSpec(RelSpec.outer), query.col1),
+				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
+		};
+		
+		clear_csv();
+	    
+		iterator.Iterator am = null;
+		iterator.Iterator am_copy = null;
+		iterator.Iterator am2 = null;
+		iterator.Iterator am2_copy = null;
+		
+		try {
+			am = new FileScan(query.rel1+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+			am_copy = new FileScan(query.rel1+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+			am2 = new FileScan(query.rel2+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+			am2_copy = new FileScan(query.rel2+".in", 
+					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+		} catch (Exception e) {
+			status = FAIL;
+			System.err.println("" + e);
+		}
+
+		long timeStart = System.currentTimeMillis();
+		IEJoin iej = null;
+		try {
+			iej = new IEJoin (Stypes, 4, Ssizes,
+					Rtypes, 4, Rsizes,
+					10,
+					am,
+					am_copy,
+					am2,
+					am2_copy,
+					query.rel2+".in",
+					outFilter, Projection, 2);
+		}
+		catch (Exception e) {
+			System.err.println ("*** Error preparing for Self Join");
+			System.err.println (""+e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		t = null;
+		int i = 0;
+		PrintWriter pw;
+		try {
+			
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query2c.txt");
+			
+			while ((t = iej.get_next()) != null) {
+				i++;
+				//t.print(jtype); // print results
+				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
+			}
+			pw.close();
+			// print the total number of returned tuples
+			System.out.println("Output Tuples for query 2c: " + i);
+		} catch (Exception e) {
+			System.err.println("" + e);
+			e.printStackTrace();
+			Runtime.getRuntime().exit(1);
+		}
+
+		try {
+			iej.close();
+			
+			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
+			System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
+		} catch (Exception e) {
+			status = FAIL;
+			e.printStackTrace();
+		}
+
+		if (status != OK) {
+			//bail out
+			Runtime.getRuntime().exit(1);
+		}
   }
   private void clear_csv() {
 	  File csv = new File(DATA_DIR_PATH+"time.csv");

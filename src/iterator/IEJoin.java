@@ -20,6 +20,8 @@ public class IEJoin extends Iterator{
 	private ArrayList<Tuple> L1_array, L2_array, L1_prim_array, L2_prim_array, result;
 	private Tuple JTuple;
 	
+
+	
 	public IEJoin(
 			AttrType    in1[],    
 			   int     len_in1,           
@@ -34,10 +36,8 @@ public class IEJoin extends Iterator{
 			   Iterator 	am2_copy,
 			   String relationName,      
 			   CondExpr outFilter[],      
-			   CondExpr rightFilter[],    
 			   FldSpec   proj_list[],
-			   int        n_out_flds, 
-			   int conditions
+			   int        n_out_flds
 			) throws Exception {
 		
 		
@@ -164,7 +164,7 @@ public class IEJoin extends Iterator{
 		L2_array = new ArrayList<Tuple>();
 			while ((tuple = L2.get_next()) != null)
 			{	
-				L1_array.add(new Tuple(tuple));
+				L2_array.add(new Tuple(tuple));
 			}
 			L2.close();
 				
@@ -174,8 +174,6 @@ public class IEJoin extends Iterator{
 			L2_prim_array.add(new Tuple(tuple));
 		}
 		L2_prim.close();
-	
-
 		
 		int M = L1_array.size();
 		int N = L1_prim_array.size();
@@ -197,7 +195,7 @@ public class IEJoin extends Iterator{
 			for(int i=0; i<N; i++) {
 				for(int j=0; j<N; j++) {
 					if(TupleUtils.Equal(L1_prim_array.get(i), L2_prim_array.get(j), in1, len_in1)) {
-						P_prim[i] = j;
+						P_prim[j] = i;
 				}
 			}
 		}
@@ -254,8 +252,9 @@ public class IEJoin extends Iterator{
 			
 			for(int i=0; i<M; i++) {
 				int off2 = O_2[i];
-				for(int j=0; i< Math.min(off2, L2_array.size()); i++) 
+				for(int j=0; j< Math.min(off2, L2_array.size()); j++) {
 					B_prim[P_prim[j]]=1;
+				}
 				int off1 = O_1[P[i]];
 				for(int k = off1+eqOff; k<N; k++ ) {
 					if(B_prim[k]==1){
@@ -268,6 +267,7 @@ public class IEJoin extends Iterator{
 			}
 		
 	}
+	
 	@Override
 	public Tuple get_next() throws IOException, JoinsException, IndexException, InvalidTupleSizeException,
 			InvalidTypeException, PageNotReadException, TupleUtilsException, PredEvalException, SortException,
