@@ -18,12 +18,12 @@ public class SelfJoin extends Iterator{
 	
 	private Tuple[] results;
 	private Iterator outer;
-	private int pointer = 0;
 	private TupleOrder order;
 	private Tuple JTuple;
 	private int eqOff;
 	private Sort L1;
-	private ArrayList<Tuple> data, result;
+	private Sort L2;
+	private ArrayList<Tuple> data, secondData, result;
 	
 	
 	  /**constructor
@@ -51,14 +51,17 @@ public class SelfJoin extends Iterator{
 			   int     len_in2,           
 			   short   t2_str_sizes[],   
 			   int     amt_of_mem,        
-			   Iterator     am1,          
+			   Iterator     am1,
+			   Iterator		am2,
 			   String relationName,      
 			   CondExpr outFilter[],      
 			   CondExpr rightFilter[],    
 			   FldSpec   proj_list[],
-			   int        n_out_flds
+			   int        n_out_flds, 
+			   int conditions
 			   ) throws IOException,NestedLoopException {
 		
+		//Setup for close call
 		outer=am1;
 		//Setupp of the JTuple 
 		
@@ -72,7 +75,6 @@ public class SelfJoin extends Iterator{
 		}catch (TupleUtilsException e){
 			throw new NestedLoopException(e, e.getMessage());
 		}
-
 		
 		//order to sort
 		if (outFilter[0].op.attrOperator == AttrOperator.aopGT || outFilter[0].op.attrOperator == AttrOperator.aopGE) {
@@ -95,7 +97,77 @@ public class SelfJoin extends Iterator{
 			}catch(SortException e) {
 				System.out.println("An error occured during sort of SelfJoin Method");
 			}
-		} 
+		}
+		
+		
+		data = new ArrayList<Tuple>();
+		Tuple tuple ;
+		try {
+			while ((tuple = L1.get_next()) != null)
+			{	
+				data.add(tuple);
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
+		if (conditions == 2 ) {
+			try {
+				// inner table sorted to get L2 iterator
+				if (outFilter[1].op.attrOperator == AttrOperator.aopGT || outFilter[1].op.attrOperator == AttrOperator.aopGE) {
+
+					TupleOrder order = new TupleOrder(TupleOrder.Descending);
+					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, t1_str_sizes[0], amt_of_mem);
+				} else if (outFilter[1].op.attrOperator == AttrOperator.aopLT || outFilter[1].op.attrOperator == AttrOperator.aopLE)
+				{
+
+					TupleOrder order = new TupleOrder(TupleOrder.Ascending);
+					
+					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 10, amt_of_mem);
+
+				} else {
+					System.out.println("Unknown operand");
+				}
+			} catch (SortException | IOException e) {
+				e.printStackTrace();
+			}
+			
+			secondData = new ArrayList<Tuple>();
+			try {
+				while ((tuple = L2.get_next()) != null)
+				{	
+					secondData.add(tuple);
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			int N = 0;
+			N = data.size();
+
+			int[] P = new int[N];
+			int[] B = new int[N]; // Bit array
+			
+			int i = 0;
+			for (Tuple tupleFromSecondData : secondData) {
+				int j = 0;
+				for (Tuple tupleFromData: data) {
+					try {
+						if (areEquals(tupleFromSecondData, tupleFromData)) {
+							P[i] = j;
+							break;
+						}
+					} catch (FieldNumberOutOfBoundException | IOException e) {
+						e.printStackTrace();
+					}
+					j++;
+				}
+				B[i] = 0;
+				i++;
+			}
+		}
+
 		
 		
 		
@@ -107,20 +179,10 @@ public class SelfJoin extends Iterator{
 			eqOff=1;
 		//initialization of the list of data, using arrayList
 		
-		data = new ArrayList<Tuple>();
 		result = new ArrayList<Tuple>();
 		
 
-		Tuple tuple ;
-		try {
-			while ((tuple = L1.get_next()) != null)
-			{	
-				System.out.println("Tuple : "+tuple);
-				data.add(tuple);
-			}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
+		
 
 		for (int i=0; i<data.size(); i++) {
 			for (int j=0; j <= i-1+eqOff; j++) {
@@ -138,13 +200,16 @@ public class SelfJoin extends Iterator{
 					e.printStackTrace();
 				}
 			}
-		}
-
-		
-		
-		
-		
+		}	
 	}
+		
+
+		public boolean areEquals(Tuple T1, Tuple T2) throws FieldNumberOutOfBoundException, IOException {
+			return (T1.getIntFld(1) == T2.getIntFld(1) &&
+				T1.getIntFld(2) == T2.getIntFld(2) &&
+				T1.getIntFld(3) == T2.getIntFld(3) &&
+				T1.getIntFld(4) == T2.getIntFld(4));
+		}
 	@Override
 	public Tuple get_next() throws IOException, JoinsException, IndexException, InvalidTupleSizeException,
 			InvalidTypeException, PageNotReadException, TupleUtilsException, PredEvalException, SortException,

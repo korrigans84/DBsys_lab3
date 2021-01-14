@@ -54,7 +54,7 @@ public class QueryFromFile {
                 if(and != null) {
                 	String[] conditions2 = br.readLine().trim().split("\\s+");
                     col1ToCompare2 = Integer.parseInt(conditions2[0].split("_", 0)[1]);
-                    operator = Integer.parseInt(conditions2[1]);
+                    operator2 = Integer.parseInt(conditions2[1]);
                     col2ToCompare2 = Integer.parseInt(conditions2[2].split("_", 0)[1]);
                 }
                 

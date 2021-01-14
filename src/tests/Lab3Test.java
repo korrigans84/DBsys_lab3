@@ -58,7 +58,7 @@ class JoinsLab3Driver implements GlobalConst {
     File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 100);
     
     //Build Q.in database
-    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 10000);
+    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 100);
    
   }
   
@@ -69,7 +69,10 @@ class JoinsLab3Driver implements GlobalConst {
    // Query1a("query_1a.txt");
    // Query1b("query_1b.txt");
 
-    Query2a("query_2a.txt");
+    //Query2a("query_2a.txt");
+    int data_len=100;
+    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
+    Query2b("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -348,9 +351,9 @@ class JoinsLab3Driver implements GlobalConst {
 	    // Sailors, Boats, Reserves Queries.
 	    System.out.print 
 	      ("Query:\n"
-	      		+ "SELECT R.c1, S.c1\n"
-	      		+ "FROM   R, S\n"
-	      		+ "WHERE R.c3 < S.c3\n"
+	      		+ "SELECT Q.c1, Q2.c1 \n"
+	      		+ "FROM   Q, Q as Q2\n"
+	      		+ "WHERE Q.c3 < Q2.c3\n"
 	       + "using self join.)\n\n");
 	    
 	    
@@ -408,8 +411,12 @@ class JoinsLab3Driver implements GlobalConst {
 			sj = new SelfJoin (Stypes, 4, Ssizes,
 					Rtypes, 4, Rsizes,
 					10,
-					am, query.rel2+".in",
-					outFilter, null, Projection, 2);
+					am, 
+					null,
+					query.rel2+".in",
+					outFilter, null, Projection, 2,
+					1
+					);
 		}
 		catch (Exception e) {
 			System.err.println ("*** Error preparing for nested_loop_join");
@@ -453,6 +460,139 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+  }
+  
+  private void Query2b(String queryFile) {
+	  System.out.print("**********************Query2b string *********************\n");
+	    boolean status = OK;
+
+	    // Sailors, Boats, Reserves Queries.
+	    System.out.print 
+	      ("Query:\n"
+		      		+ "SELECT Q.c1, Q2.c1 \n"
+		      		+ "FROM   Q, Q as Q2\n"
+		      		+ "WHERE Q.c3 <= Q2.c3\n"
+	      		+ "AND\n"
+	      		+ "Q.c4 < Q.c4\n"
+	       + "using self join.)\n\n");
+	    
+	    
+	    
+	    CondExpr [] outFilter  = new CondExpr[3];
+		outFilter[0] = new CondExpr();
+		outFilter[1] = new CondExpr();
+		outFilter[2] = new CondExpr();
+		
+		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
+		
+		CondExpr_Query1b(
+				outFilter, 
+				query.operator, query.col1ToCompare, query.col2ToCompare,  
+				query.operator2, query.col1ToCompare2, query.col2ToCompare2);
+		
+		Tuple t = new Tuple();
+		t = null;
+		AttrType Stypes[] = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Ssizes = null;
+		
+		AttrType [] Rtypes = {
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrInteger)
+		};
+		short[] Rsizes = null;
+		FldSpec [] Sprojection = {
+				new FldSpec(new RelSpec(RelSpec.outer), 1),
+				new FldSpec(new RelSpec(RelSpec.outer), 2),
+				new FldSpec(new RelSpec(RelSpec.outer), 3),
+				new FldSpec(new RelSpec(RelSpec.outer), 4),
+		};
+		
+		FldSpec [] Projection = {
+				new FldSpec(new RelSpec(RelSpec.outer), query.col1),
+				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
+		};
+		
+
+	    for (int data_len=100; data_len<300; data_len+=100)
+	    {
+		    System.out.println("Number of data in Q.in : " + data_len);
+		    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
+		    
+			iterator.Iterator am = null;
+			iterator.Iterator am2 = null;
+			
+			try {
+				am = new FileScan(query.rel1+".in", 
+						Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+				am2 = new FileScan(query.rel1+".in", 
+						Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
+			} catch (Exception e) {
+				status = FAIL;
+				System.err.println("" + e);
+			}
+	
+			long timeStart = System.currentTimeMillis();
+			SelfJoin sj = null;
+			try {
+				sj = new SelfJoin (Stypes, 4, Ssizes,
+						Rtypes, 4, Rsizes,
+						10,
+						am,
+						am2,
+						query.rel2+".in",
+						outFilter, null, Projection, 2, 2);
+			}
+			catch (Exception e) {
+				System.err.println ("*** Error preparing for Self Join");
+				System.err.println (""+e);
+				e.printStackTrace();
+				Runtime.getRuntime().exit(1);
+			}
+	
+			AttrType[] jtype = { new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger),
+					new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrInteger)};
+	
+			t = null;
+			int i = 0;
+			PrintWriter pw;
+			try {
+				
+				pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
+				
+				while ((t = sj.get_next()) != null) {
+					i++;
+					//t.print(jtype); // print results
+					pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
+				}
+				pw.close();
+				// print the total number of returned tuples
+				System.out.println("Output Tuples for query 2a: " + i);
+			} catch (Exception e) {
+				System.err.println("" + e);
+				e.printStackTrace();
+				Runtime.getRuntime().exit(1);
+			}
+	
+			try {
+				sj.close();
+				System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms");
+			} catch (Exception e) {
+				status = FAIL;
+				e.printStackTrace();
+			}
+	
+			if (status != OK) {
+				//bail out
+				Runtime.getRuntime().exit(1);
+			}
+	    }
   }
   private boolean File2Heap(String fileNameInput, String fileNameOutput, int max_num_tuples){
 	     

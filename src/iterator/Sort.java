@@ -148,7 +148,6 @@ public class Sort extends Iterator implements GlobalConst
     pnodeSplayPQ pother_Q = Q2; 
     Tuple lastElem = new Tuple(tuple_size);  // need tuple.java
     try {
-  	  System.out.println("I'm here : "+ str_lens);
 
       lastElem.setHdr(n_cols, _in, str_lens);
     }
