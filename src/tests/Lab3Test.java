@@ -58,7 +58,7 @@ class JoinsLab3Driver implements GlobalConst {
     File2Heap(DATA_DIR_PATH+"R.txt", "R.in", 100);
     
     //Build Q.in database
-    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 100);
+    File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", 1000);
    
   }
   
@@ -67,12 +67,12 @@ class JoinsLab3Driver implements GlobalConst {
     
     Disclaimer();
    // Query1a("query_1a.txt");
-   // Query1b("query_1b.txt");
+   Query1b("query_2b.txt");
 
     //Query2a("query_2a.txt");
     int data_len=100;
     File2Heap(DATA_DIR_PATH+"q.txt", "Q.in", data_len);
-    Query2b("query_2b.txt");
+    //Query2b("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -245,7 +245,7 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[2] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		
+		System.out.println("Table : "+query.rel1);
 		CondExpr_Query1b(
 				outFilter, 
 				query.operator, query.col1ToCompare, query.col2ToCompare,  
