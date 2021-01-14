@@ -65,7 +65,6 @@ public class SelfJoin extends Iterator{
 		//Setup for close call
 		outer=am1;
 		outer2=am2;
-		//Setup of the JTuple 
 		
 		
 
