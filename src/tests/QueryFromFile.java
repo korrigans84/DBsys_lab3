@@ -57,6 +57,8 @@ public class QueryFromFile {
                     operator2 = Integer.parseInt(conditions2[1]);
                     col2ToCompare2 = Integer.parseInt(conditions2[2].split("_", 0)[1]);
                 }
+        		System.out.println(col2ToCompare2);
+
                 
             }catch(Exception e) {
             	

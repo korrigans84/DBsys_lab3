@@ -176,13 +176,12 @@ public class IEJoin extends Iterator{
 			compute the offset array O 1 of L 1 w.r.t. L 0 1		
 		***************************************************************************************/
 			int[] O_1 = new int[M];
-			
 			for(int i=0; i<M; i++) {
 				for(int j=0; j<N; j++) {
 					if(TupleUtils.CompareTupleWithTuple(
 							new AttrType(AttrType.attrInteger), 
-							L1_array.get(i), proj_list[0].offset, 
-							L1_prim_array.get(j), proj_list[1].offset)>=0) {
+							L1_array.get(i), outFilter[0].operand1.symbol.offset, 
+							L1_prim_array.get(j), outFilter[0].operand2.symbol.offset)>=0) {
 						O_1[i] = j;
 						break;
 					}
@@ -197,8 +196,8 @@ public class IEJoin extends Iterator{
 				for(int j=0; j<N; j++) {
 					if(TupleUtils.CompareTupleWithTuple(
 							new AttrType(AttrType.attrInteger),
-							L2_array.get(i), proj_list[0].offset, 
-							L2_prim_array.get(j), proj_list[1].offset)>=0) {
+							L2_array.get(i), outFilter[1].operand1.symbol.offset, 
+							L2_prim_array.get(j), outFilter[1].operand2.symbol.offset)>=0) {
 						O_2[i] = j;
 						break;
 					}
