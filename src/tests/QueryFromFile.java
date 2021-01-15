@@ -26,10 +26,12 @@ public class QueryFromFile {
 	public int col1ToCompare2;
 	public int operator2;
 	public int col2ToCompare2;
+	private File file;
 	
 	
 	public QueryFromFile(String filename) {
-		File file = new File(filename);
+		file = new File(filename);
+		
 		if (file.exists()) {
 			try {
 				FileReader fr = new FileReader(file);
@@ -56,14 +58,29 @@ public class QueryFromFile {
                     col1ToCompare2 = Integer.parseInt(conditions2[0].split("_", 0)[1]);
                     operator2 = Integer.parseInt(conditions2[1]);
                     col2ToCompare2 = Integer.parseInt(conditions2[2].split("_", 0)[1]);
-                }
-        		System.out.println(col2ToCompare2);
-
+                } 
                 
             }catch(Exception e) {
-            	
+            	e.getStackTrace();
             }
 		}
-		
 	}
+	
+	public void print() {
+		
+		if (file.exists()) {
+			try {
+				FileReader fr = new FileReader(file);
+	            BufferedReader br = new BufferedReader(fr);
+	            String line;
+	            System.out.println("The iterator is going to execute this query : \n");
+	            while((line = br.readLine()) != null)
+	            	System.out.println(line);
+				System.out.print("\n\n");
+			}catch(Exception e) {
+	        	e.getStackTrace();
+	        }
+		}
+	}
+	
 }

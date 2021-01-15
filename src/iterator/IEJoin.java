@@ -83,7 +83,7 @@ public class IEJoin extends Iterator{
 		L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
 				(iterator.Iterator) am1, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
 		L1_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-				(iterator.Iterator) am2, outFilter[0].operand1.symbol.offset, order, 0, amt_of_mem);
+				(iterator.Iterator) am2, outFilter[0].operand2.symbol.offset, order, 0, amt_of_mem);
 		}catch(SortException e) {
 			System.out.println("An error occured during sort of SelfJoin Method");
 		}
@@ -104,9 +104,9 @@ public class IEJoin extends Iterator{
 		
 		try {
 			L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am1_copy, outFilter[0].operand1.symbol.offset, order2, 0, amt_of_mem);
+					(iterator.Iterator) am1_copy, outFilter[1].operand1.symbol.offset, order2, 0, amt_of_mem);
 			L2_prim = new Sort (in1, (short) len_in1, t1_str_sizes,
-					(iterator.Iterator) am2_copy, outFilter[0].operand1.symbol.offset, order2, 0, amt_of_mem);
+					(iterator.Iterator) am2_copy, outFilter[1].operand2.symbol.offset, order2, 0, amt_of_mem);
 			}catch(SortException e) {
 				System.out.println("An error occured during sort of SelfJoin Method");
 			}
@@ -126,6 +126,7 @@ public class IEJoin extends Iterator{
 			while ((tuple = L1_prim.get_next()) != null)
 			{	
 				L1_prim_array.add(new Tuple(tuple));
+
 			}
 			L1_prim.close();
 			
@@ -133,6 +134,7 @@ public class IEJoin extends Iterator{
 			while ((tuple = L2.get_next()) != null)
 			{	
 				L2_array.add(new Tuple(tuple));
+
 			}
 			L2.close();
 				
@@ -140,6 +142,7 @@ public class IEJoin extends Iterator{
 		while ((tuple = L2_prim.get_next()) != null)
 		{	
 			L2_prim_array.add(new Tuple(tuple));
+
 		}
 		L2_prim.close();
 		
@@ -228,7 +231,6 @@ public class IEJoin extends Iterator{
 			/***************************************************************************************	
 			 *				LOOP FOR OF THE ALGORITHM
 			 ***************************************************************************************/
-			
 			for(int i=0; i<M; i++) {
 				int off2 = O_2[i];
 				for(int j=0; j< Math.min(off2, L2_array.size()); j++) {

@@ -15,7 +15,7 @@ import catalog.*;
 
 class JoinsLab3Driver implements GlobalConst {
   private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
-  private int data_rows_number = 100;
+  private int data_rows_number = 500;
   private boolean OK = true;
   private boolean FAIL = false;
 
@@ -70,13 +70,12 @@ class JoinsLab3Driver implements GlobalConst {
  
   public boolean runTests() {
    
-	Query1a("query_2a.txt");
-
-   //Query1b("query_1b.txt");
-
-    Query2a("query_2a.txt");
-    //Query2b("query_2b.txt");
-    //Query2c("query_2b.txt");
+	  //Query1a("query_2a.txt");
+	 //Query1b("query_2b.txt");
+   	
+    //Query2a("query_2a.txt");
+    Query2b("query_2b.txt");
+    Query2c("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -118,7 +117,7 @@ class JoinsLab3Driver implements GlobalConst {
    * @param queryFile
    */
   private void Query1a(String queryFile) {
-	  System.out.print("**********************Query1a strating *********************\n");
+	  System.out.print("**********************Query1a is starting *********************\n\n");
 	    boolean status = OK;
 	    
 	    
@@ -127,7 +126,7 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[1] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		
+		query.print();
 		CondExpr_Query1a(outFilter, query.operator, query.col1ToCompare, query.col2ToCompare );
 		
 		Tuple t = new Tuple();
@@ -160,7 +159,7 @@ class JoinsLab3Driver implements GlobalConst {
 		};
 	    
 		iterator.Iterator am = null;
-
+		long start_time = System.currentTimeMillis();
 		try {
 			am = new FileScan(query.rel1+".in", 
 					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
@@ -202,6 +201,8 @@ class JoinsLab3Driver implements GlobalConst {
 			}
 			pw.close();
 			// print the total number of returned tuples
+			long query_time = System.currentTimeMillis() - start_time;
+			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1a: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -220,6 +221,8 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+	  System.out.print("**********************Query1a finished successfully *********************\n\n");
+
   }
 
   /**
@@ -231,7 +234,7 @@ class JoinsLab3Driver implements GlobalConst {
   private void Query1b(String queryFile) {
 
 	  
-	  System.out.print("**********************Query1b starting *********************\n");
+	  System.out.print("**********************Query1b is starting *********************\n");
 	    boolean status = OK;
 	    
 	    
@@ -241,7 +244,8 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[2] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		
+		query.print();
+
 		CondExpr_Query1b(
 				outFilter, 
 				query.operator, query.col1ToCompare, query.col2ToCompare,  
@@ -277,7 +281,7 @@ class JoinsLab3Driver implements GlobalConst {
 		};
 	    
 		iterator.Iterator am = null;
-
+		long start_time = System.currentTimeMillis();
 		try {
 			am = new FileScan(query.rel1+".in", 
 					Stypes, Ssizes, (short) 4, (short) 4, Sprojection, null);
@@ -319,7 +323,10 @@ class JoinsLab3Driver implements GlobalConst {
 			}
 			pw.close();
 			// print the total number of returned tuples
+			long query_time = System.currentTimeMillis() - start_time;
+			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1b: " + i);
+			
 		} catch (Exception e) {
 			System.err.println("" + e);
 			e.printStackTrace();
@@ -337,6 +344,8 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+		  System.out.print("**********************Query1b finished successfully *********************\n\n");
+
   }
 
   /**
@@ -346,7 +355,7 @@ class JoinsLab3Driver implements GlobalConst {
    * @param queryFile
    */
   private void Query2a(String queryFile) {
-	  System.out.print("**********************Query2a string *********************\n");
+	  System.out.print("**********************Query2a is starting *********************\n");
 	    boolean status = OK;
 
 	    CondExpr [] outFilter  = new CondExpr[2];
@@ -354,7 +363,8 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[1] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		
+		query.print();
+
 		CondExpr_Query1a(outFilter, query.operator, query.col1ToCompare, query.col2ToCompare );
 		
 		Tuple t = new Tuple();
@@ -422,7 +432,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query2a.txt");
 			
 			while ((t = sjsp.get_next()) != null) {
 				i++;
@@ -449,6 +459,8 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+		  System.out.print("**********************Query2a finished successfully *********************\n\n");
+
   }
   
   
@@ -460,19 +472,8 @@ class JoinsLab3Driver implements GlobalConst {
    * @param queryFile
    */
   private void Query2b(String queryFile) {
-	  System.out.print("**********************Query2b starting *********************\n");
+	  System.out.print("**********************Query2b is starting *********************\n");
 	    boolean status = OK;
-
-	    // Sailors, Boats, Reserves Queries.
-	    System.out.print 
-	      ("Query:\n"
-		      		+ "SELECT Q.c1, Q2.c1 \n"
-		      		+ "FROM   Q, Q as Q2\n"
-		      		+ "WHERE Q.c3 <= Q2.c3\n"
-	      		+ "AND\n"
-	      		+ "Q.c4 < Q.c4\n"
-	       + "using self join.\n\n");
-	    
 	    
 	    
 	    CondExpr [] outFilter  = new CondExpr[3];
@@ -481,7 +482,8 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[2] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
-		
+		query.print();
+
 		CondExpr_Query1b(
 				outFilter, 
 				query.operator, query.col1ToCompare, query.col2ToCompare,  
@@ -531,7 +533,7 @@ class JoinsLab3Driver implements GlobalConst {
 			System.err.println("" + e);
 		}
 
-		long timeStart = System.currentTimeMillis();
+		long time_start = System.currentTimeMillis();
 		SelfJoin sj = null;
 		try {
 			sj = new SelfJoin (Stypes, 4, Ssizes,
@@ -541,7 +543,6 @@ class JoinsLab3Driver implements GlobalConst {
 					am2,
 					query.rel2+".in",
 					outFilter, null, Projection, 2);
-			System.out.println(Runtime.getRuntime().freeMemory());
 		}
 		catch (Exception e) {
 			System.err.println ("*** Error preparing for Self Join");
@@ -555,7 +556,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output_query2b.txt");
 			
 			while ((t = sj.get_next()) != null) {
 				i++;
@@ -564,6 +565,11 @@ class JoinsLab3Driver implements GlobalConst {
 				}
 			pw.close();
 			// print the total number of returned tuples
+			
+			
+			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart, "query2b.csv");
+			long query_time = System.currentTimeMillis() - time_start;
+			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 2b: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -574,8 +580,6 @@ class JoinsLab3Driver implements GlobalConst {
 		try {
 			sj.close();
 			
-			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
-			System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
 		} catch (Exception e) {
 			status = FAIL;
 			e.printStackTrace();
@@ -585,8 +589,8 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
-		
-	   
+		System.out.print("**********************Query2b finished successfully *********************\n\n");
+
   }
   
   /**
@@ -595,7 +599,7 @@ class JoinsLab3Driver implements GlobalConst {
    */
   private void Query2c(String queryFile) {
 
-	  System.out.print("**********************Query2c starting *********************\n");
+	  System.out.print("**********************Query2c is starting *********************\n");
 	    boolean status = OK;
 	    
 	    
@@ -606,6 +610,9 @@ class JoinsLab3Driver implements GlobalConst {
 		outFilter[2] = new CondExpr();
 		
 		QueryFromFile query = new QueryFromFile(DATA_DIR_PATH+queryFile);
+		query.print();
+
+		
 		CondExpr_Query1b(
 				outFilter, 
 				query.operator, query.col1ToCompare, query.col2ToCompare,  
@@ -716,6 +723,8 @@ class JoinsLab3Driver implements GlobalConst {
 			//bail out
 			Runtime.getRuntime().exit(1);
 		}
+		  System.out.print("**********************Query2c finished successfully *********************\n\n");
+
   }
   
   /**
@@ -865,8 +874,9 @@ class JoinsLab3Driver implements GlobalConst {
 	    System.out.println("Number of data rows : "+data_rows_number);
 	    System.out.println("You can play with the number of rows by changing the value of data_rows_number variable\n\n");
   }
- 
+  
 }
+
 
 public class Lab3Test
 {
