@@ -8,6 +8,12 @@ The main objective of this lab is to play with joins in a DBMS.
 - Contributors : Group C : **Julien THOMAS (julien.thomas@eurecom.fr) and Eliot CALIMEZ (eliot.calimez@eurecom.fr)**
 
 - Repository : https://github.com/korrigans84/DBsys-LAB3
+
+
+## Explore the project
+
+## Run instructions
+
 ## Task 1a - Test/extend the existing NLJ with single predicate inequality joins.
 
 ## Task 1b - Test/extend NLJ with two predicates inequality join
