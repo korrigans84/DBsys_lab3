@@ -15,7 +15,7 @@ import catalog.*;
 
 class JoinsLab3Driver implements GlobalConst {
   private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
-  private int data_rows_number = 100;
+  private int data_rows_number = 1000;
   private boolean OK = true;
   private boolean FAIL = false;
 
@@ -70,14 +70,13 @@ class JoinsLab3Driver implements GlobalConst {
  
   public boolean runTests() {
    
-    //Query1b("query_2b.txt");
+	Query1a("query_2a.txt");
 
-    //Query2b("query_2b.txt");
-   //Query1b("query_2b.txt");
+   //Query1b("query_1b.txt");
 
-    //Query2a("query_2a.txt");
+    Query2a("query_2a.txt");
     //Query2b("query_2b.txt");
-    Query2c("query_2b.txt");
+    //Query2c("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -350,15 +349,6 @@ class JoinsLab3Driver implements GlobalConst {
 	  System.out.print("**********************Query2a string *********************\n");
 	    boolean status = OK;
 
-	    // Sailors, Boats, Reserves Queries.
-	    System.out.print 
-	      ("Query:\n"
-	      		+ "SELECT Q.c1, Q2.c1 \n"
-	      		+ "FROM   Q, Q as Q2\n"
-	      		+ "WHERE Q.c3 < Q2.c3\n"
-	       + "using self join.\n\n");
-	    
-	    
 	    CondExpr [] outFilter  = new CondExpr[2];
 		outFilter[0] = new CondExpr();
 		outFilter[1] = new CondExpr();
@@ -407,13 +397,12 @@ class JoinsLab3Driver implements GlobalConst {
 		}
 
 		// IESelfJoin
-		SelfJoin sj = null;
+		SelfJoinSinglePredicate sjsp = null;
 		try {
-			sj = new SelfJoin (Stypes, 4, Ssizes,
+			sjsp = new SelfJoinSinglePredicate (Stypes, 4, Ssizes,
 					Rtypes, 4, Rsizes,
 					10,
-					am, 
-					null,
+					am,
 					query.rel2+".in",
 					outFilter, null, Projection, 2
 					);
@@ -435,7 +424,7 @@ class JoinsLab3Driver implements GlobalConst {
 			
 			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
 			
-			while ((t = sj.get_next()) != null) {
+			while ((t = sjsp.get_next()) != null) {
 				i++;
 				//t.print(jtype); // print results
 				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
@@ -450,7 +439,7 @@ class JoinsLab3Driver implements GlobalConst {
 		}
 
 		try {
-			sj.close();
+			sjsp.close();
 		} catch (Exception e) {
 			status = FAIL;
 			e.printStackTrace();
@@ -552,6 +541,7 @@ class JoinsLab3Driver implements GlobalConst {
 					am2,
 					query.rel2+".in",
 					outFilter, null, Projection, 2);
+			System.out.println(Runtime.getRuntime().freeMemory());
 		}
 		catch (Exception e) {
 			System.err.println ("*** Error preparing for Self Join");
@@ -571,7 +561,7 @@ class JoinsLab3Driver implements GlobalConst {
 				i++;
 				//t.print(jtype); // print results
 				pw.print("[" + t.getIntFld(1) + ","  +  t.getIntFld(2) +  "]\n"); // get tuples in .txt file
-			}
+				}
 			pw.close();
 			// print the total number of returned tuples
 			System.out.println("Output Tuples for query 2b: " + i);
