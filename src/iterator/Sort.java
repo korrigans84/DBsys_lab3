@@ -148,6 +148,7 @@ public class Sort extends Iterator implements GlobalConst
     pnodeSplayPQ pother_Q = Q2; 
     Tuple lastElem = new Tuple(tuple_size);  // need tuple.java
     try {
+
       lastElem.setHdr(n_cols, _in, str_lens);
     }
     catch (Exception e) {
@@ -673,6 +674,7 @@ public class Sort extends Iterator implements GlobalConst
 	   JoinsException,
 	   Exception
   {
+
     if (first_time) {
       // first get_next call to the sort routine
       first_time = false;

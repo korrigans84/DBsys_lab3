@@ -1,2 +1,5 @@
 .project
 .git
+*.class
+.idea
+javaminibase.iml

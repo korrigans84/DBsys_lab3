@@ -63,7 +63,8 @@ class Reserves {
 }
 
 class JoinsDriver implements GlobalConst {
-  
+  private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
+
   private boolean OK = true;
   private boolean FAIL = false;
   private Vector sailors;
@@ -72,7 +73,15 @@ class JoinsDriver implements GlobalConst {
   /** Constructor
    */
   public JoinsDriver() {
-    
+	Heapfile g = null;
+	  try {
+	   g = new Heapfile("sailors.in");
+	  }
+	   
+	  catch (Exception e) {
+	   System.err.println("*** error in Heapfile constructor ***");
+	   e.printStackTrace();
+	  }
     //build Sailor, Boats, Reserves table
     sailors  = new Vector();
     boats    = new Vector();
@@ -371,7 +380,159 @@ class JoinsDriver implements GlobalConst {
     
   }
   
-  public boolean runTests() {
+  private boolean File2Heap(String fileNameInput, String fileNameOutput, int max_num_tuples){
+	     
+	    /**
+	    * 
+	    * BUILD table from "fileInput"
+	    * 
+	    *  @parameter fileNameInput Name of file containing data
+	    *  @parameter fileNameOutput Name of table saved in the DB
+	    *  @parameter max_num_tuples Max number of tuple to load from the file in case ofbig files. 
+	    *  
+	    * **/  
+	   
+	    if(fileNameInput==null || fileNameOutput==null) {
+	     return false;
+	    }
+	    
+	    if(max_num_tuples<=0) {
+	     max_num_tuples=Integer.MAX_VALUE; // Load tuples until the HeapFile can contain them
+	    }
+	     /* Create relation */
+	     
+	     AttrType [] types = new AttrType[4];
+	     types[0] = new AttrType (AttrType.attrInteger);
+	     types[1] = new AttrType (AttrType.attrInteger);
+	     types[2] = new AttrType (AttrType.attrInteger);
+	     types[3] = new AttrType (AttrType.attrInteger);
+	     
+	     short numField=4;
+	       
+	     Tuple t = new Tuple();
+	       
+	     try {
+	      t.setHdr(numField,types, null);
+	     }
+	     catch (Exception e) {
+	       
+	      System.err.println("*** error in Tuple.setHdr() ***");
+	         e.printStackTrace();
+	         return false;
+	     }
+	       
+	      int t_size = t.size();
+	       
+	      RID rid;
+	       
+	      Heapfile f = null;
+	       
+	      try {
+	       f = new Heapfile(fileNameOutput);
+	      }
+	       
+	      catch (Exception e) {
+	       System.err.println("*** error in Heapfile constructor ***");
+	       e.printStackTrace();
+	       return false;
+	      }
+	       
+	       
+	      t = new Tuple(t_size);
+	      
+	      try {
+	       t.setHdr((short) 4, types, null);
+	      }
+	      catch (Exception e) {
+	       System.err.println("*** error in Tuple.setHdr() ***");
+	       e.printStackTrace();
+	       return false;
+	      }
+	      
+	      int cont=0; // To limit the size of table
+	      
+	      try {
+	    
+	       File file = new File(fileNameInput);
+	       BufferedReader reader=null;
+	       reader = new BufferedReader(new FileReader(file));
+	    
+	       String text = null;
+	       text = reader.readLine(); //To skip header
+	       text="";
+	       
+	       while ((text = reader.readLine()) != null && cont!=max_num_tuples) {
+	         
+	        String[] attributes=text.split(",");
+	        t.setIntFld(1, Integer.parseInt(attributes[0]));
+	        t.setIntFld(2, Integer.parseInt(attributes[1]));    
+	        t.setIntFld(3, Integer.parseInt(attributes[2]));
+	        t.setIntFld(4, Integer.parseInt(attributes[3]));
+	        f.insertRecord(t.getTupleByteArray());
+	        cont++;
+	    }
+	    reader.close();
+	      }
+	      catch(FileNotFoundException e1) {
+	       System.err.println("*** File "+fileNameInput+" ***");
+	       e1.printStackTrace();
+	       return false;
+	      }
+	      catch (Exception e) {
+	       
+	       System.err.println("*** Heapfile error in Tuple.setIntFld() ***");
+	       e.printStackTrace();
+	       return false;
+	        
+	      }   
+	      
+	      System.out.println("Number of tuple inserted: "+cont);  
+	      return true;
+	      
+	}
+  
+  private  String[][] File2List(String myfile)  {
+		
+	BufferedReader abc;
+	try {
+		abc = new BufferedReader(new FileReader(myfile));
+	
+	int M=(int) abc.lines().count();
+	abc.close();
+	
+	int i=0;
+	
+	abc = new BufferedReader(new FileReader(myfile));
+	String [][] east ;
+	String line;
+	line = abc.readLine() + ","+ Integer.toString(0);
+
+	String[] dimes = line.split(",");
+	
+	int N=dimes.length;
+	
+	east= new String [M][N];
+	 
+	east[0]=dimes;
+	 
+	
+	for( i=1;i<M;i++) {
+	   line = abc.readLine();
+	   dimes = line.split(",");
+	   east[i]=dimes;	 
+	                   }
+	 abc.close();
+	
+	return east;}
+   catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		return null;
+	}
+	 
+	}
+  
+  public boolean runTests()  {
     
     Disclaimer();
     Query1();
@@ -386,7 +547,6 @@ class JoinsDriver implements GlobalConst {
     
     
     System.out.print ("Finished joins testing"+"\n");
-   
     
     return true;
   }
@@ -1684,7 +1844,7 @@ class JoinsDriver implements GlobalConst {
   }
 }
 
-public class JoinTest
+public class JoinTest_LoadingFunctions
 {
   public static void main(String argv[])
   {
@@ -1701,6 +1861,7 @@ public class JoinTest
     else {
       System.out.println("join tests completed successfully");
     }
+    
   }
 }
 
