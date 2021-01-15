@@ -15,7 +15,8 @@ import catalog.*;
 
 class JoinsLab3Driver implements GlobalConst {
   private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
-  private int data_rows_number = 500;
+  private final boolean WRITE_TO_CSV = true;
+  private int data_rows_number = 2000;
   private boolean OK = true;
   private boolean FAIL = false;
 
@@ -48,7 +49,7 @@ class JoinsLab3Driver implements GlobalConst {
     catch (IOException e) {
       System.err.println (""+e);
     }
-    SystemDefs sysdef = new SystemDefs( dbpath, 1000, NUMBUF, "Clock" );
+    SystemDefs sysdef = new SystemDefs( dbpath, 1000000, NUMBUF, "Clock" );
 
     
     informations();
@@ -70,12 +71,12 @@ class JoinsLab3Driver implements GlobalConst {
  
   public boolean runTests() {
    
-	  //Query1a("query_2a.txt");
-	 //Query1b("query_2b.txt");
+	Query1a("query_2a.txt");
+	//Query1b("query_2b.txt");
    	
-    //Query2a("query_2a.txt");
-    Query2b("query_2b.txt");
-    Query2c("query_2b.txt");
+	Query2a("query_2a.txt");
+    //Query2b("query_2b.txt");
+    //Query2c("query_2b.txt");
     
     System.out.print ("Finished joins testing"+"\n");
    
@@ -93,7 +94,7 @@ class JoinsLab3Driver implements GlobalConst {
 	outFilter[1] = null;
 }
   private void CondExpr_Query1b(CondExpr[] outFilter, int operator, int outerSymbol, int innerSymbol, int operator2, int outer2Symbol, int inner2Symbol  ) {
-
+	  
 	outFilter[0].next  = null;
 	outFilter[0].op    = new AttrOperator(operator);
 	outFilter[0].type1 = new AttrType(AttrType.attrSymbol);
@@ -192,7 +193,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query1a.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output/output_query1a.txt");
 			
 			while ((t = nlj.get_next()) != null) {
 				i++;
@@ -202,6 +203,8 @@ class JoinsLab3Driver implements GlobalConst {
 			pw.close();
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
+			if(WRITE_TO_CSV)
+				write_time_to_csv(query_time, "query_1a.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1a: " + i);
 		} catch (Exception e) {
@@ -314,7 +317,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query1b.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output/output_query1b.txt");
 			
 			while ((t = nlj.get_next()) != null) {
 				i++;
@@ -324,6 +327,8 @@ class JoinsLab3Driver implements GlobalConst {
 			pw.close();
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
+			if(WRITE_TO_CSV)
+				write_time_to_csv(query_time, "query_1b.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1b: " + i);
 			
@@ -397,6 +402,7 @@ class JoinsLab3Driver implements GlobalConst {
 		};
 	    
 		iterator.Iterator am = null;
+		long start_time = System.currentTimeMillis();
 
 		try {
 			am = new FileScan(query.rel1+".in", 
@@ -432,7 +438,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query2a.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output/output_query2a.txt");
 			
 			while ((t = sjsp.get_next()) != null) {
 				i++;
@@ -441,6 +447,10 @@ class JoinsLab3Driver implements GlobalConst {
 			}
 			pw.close();
 			// print the total number of returned tuples
+			long query_time = System.currentTimeMillis() - start_time;
+			if(WRITE_TO_CSV)
+				write_time_to_csv(query_time, "query_2a.csv", i);
+			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 2a: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -517,11 +527,10 @@ class JoinsLab3Driver implements GlobalConst {
 				new FldSpec(new RelSpec(RelSpec.outer), query.col1),
 				new FldSpec(new RelSpec(RelSpec.innerRel), query.col2)
 		};
-		
-		clear_csv();
-	    
+			    
 		iterator.Iterator am = null;
 		iterator.Iterator am2 = null;
+		long start_time = System.currentTimeMillis();
 		
 		try {
 			am = new FileScan(query.rel1+".in", 
@@ -556,7 +565,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query2b.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output/output_query2b.txt");
 			
 			while ((t = sj.get_next()) != null) {
 				i++;
@@ -567,8 +576,9 @@ class JoinsLab3Driver implements GlobalConst {
 			// print the total number of returned tuples
 			
 			
-			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart, "query2b.csv");
-			long query_time = System.currentTimeMillis() - time_start;
+			long query_time = System.currentTimeMillis() - start_time;
+			if(WRITE_TO_CSV)
+				write_time_to_csv(query_time, "query_2b.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 2b: " + i);
 		} catch (Exception e) {
@@ -653,6 +663,8 @@ class JoinsLab3Driver implements GlobalConst {
 		iterator.Iterator am_copy = null;
 		iterator.Iterator am2 = null;
 		iterator.Iterator am2_copy = null;
+
+		long start_time = System.currentTimeMillis();
 		
 		try {
 			am = new FileScan(query.rel1+".in", 
@@ -693,7 +705,7 @@ class JoinsLab3Driver implements GlobalConst {
 		PrintWriter pw;
 		try {
 			
-			pw = new PrintWriter(DATA_DIR_PATH+"output_query2c.txt");
+			pw = new PrintWriter(DATA_DIR_PATH+"output/output_query2c.txt");
 			
 			while ((t = iej.get_next()) != null) {
 				i++;
@@ -702,6 +714,9 @@ class JoinsLab3Driver implements GlobalConst {
 			}
 			pw.close();
 			// print the total number of returned tuples
+			long query_time = System.currentTimeMillis() - start_time;
+			if(WRITE_TO_CSV)
+				write_time_to_csv(query_time, "query_2c.csv", i);
 			System.out.println("Output Tuples for query 2c: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -711,9 +726,6 @@ class JoinsLab3Driver implements GlobalConst {
 
 		try {
 			iej.close();
-			
-			//write_time_to_csv( data_len, System.currentTimeMillis() - timeStart);
-			System.out.println("Time for the query : "+ (System.currentTimeMillis() - timeStart) + " ms\n\n\n");
 		} catch (Exception e) {
 			status = FAIL;
 			e.printStackTrace();
@@ -738,15 +750,15 @@ class JoinsLab3Driver implements GlobalConst {
   /**
    * Write execution time and the number of data rows
    * in csv
-   * @param data_len
    * @param time
+   * @param file
    */
-  private void write_time_to_csv(int data_len, long time, String file) 
+  private void write_time_to_csv( long time, String file, int num_tuples_output) 
   {
 	  try {
-		FileWriter csv = new FileWriter(DATA_DIR_PATH+file, true);
+		FileWriter csv = new FileWriter(DATA_DIR_PATH+"csv/"+file, true);
 		
-		csv.write(data_len + "," + time + "\n");
+		csv.write(data_rows_number + "," + time + ","+num_tuples_output+"\n");
 		csv.close();
 	} catch (IOException e) {
 		System.out.println("Enable to write result time in file "+ file);

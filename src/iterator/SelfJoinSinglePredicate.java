@@ -25,6 +25,7 @@ public class SelfJoinSinglePredicate extends Iterator{
 	private Sort L1;
 	private Sort L2;
 	private ArrayList<Tuple> L1_array, L2_array, result;
+	private int pointer;
 
 	  /**constructor
 	   *Initialize the two relations which are joined, including relation type,
@@ -170,7 +171,8 @@ public class SelfJoinSinglePredicate extends Iterator{
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 		}
-	}
+		
+		pointer = result.size() -1 ;	}
 	@Override
 	
 	public Tuple get_next() throws IOException, JoinsException, IndexException, InvalidTupleSizeException,
@@ -179,8 +181,8 @@ public class SelfJoinSinglePredicate extends Iterator{
 
 		if(result.isEmpty())
 			return null;
-		Tuple next = result.get(0);
-		result.remove(0);
+		Tuple next = result.remove(pointer);
+		pointer--;
 		return next;
 	}
 

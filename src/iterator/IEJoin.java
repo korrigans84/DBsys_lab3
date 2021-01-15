@@ -19,6 +19,7 @@ public class IEJoin extends Iterator{
 	private Sort L1, L1_prim, L2, L2_prim;
 	private ArrayList<Tuple> L1_array, L2_array, L1_prim_array, L2_prim_array, result;
 	private Tuple JTuple;
+	private int pointer;
 	
 
 	
@@ -156,7 +157,7 @@ public class IEJoin extends Iterator{
 		for(int i=0; i<M; i++) {
 			for(int j=0; j<M; j++) {
 				if(TupleUtils.Equal(L1_array.get(i), L2_array.get(j), in1, len_in1)) {
-					P[i] = j;
+					P[j] = i;
 					break;
 				}
 			}
@@ -166,14 +167,14 @@ public class IEJoin extends Iterator{
 			compute the permutation array P 0 of L 0 2 w.r.t. L 0 1		 
 		***************************************************************************************/
 		int[] P_prim = new int[N];
-			for(int i=0; i<N; i++) {
+		for(int i=0; i<N; i++) {
 				for(int j=0; j<N; j++) {
 					if(TupleUtils.Equal(L1_prim_array.get(i), L2_prim_array.get(j), in1, len_in1)) {
 						P_prim[j] = i;
 						break;
+					}
 				}
 			}
-		}
 
 		/***************************************************************************************
 			compute the offset array O 1 of L 1 w.r.t. L 0 1		
@@ -190,7 +191,7 @@ public class IEJoin extends Iterator{
 					}
 				}
 			}
-
+			
 		/***************************************************************************************
 			compute the offset array O 2 of L 2 w.r.t. L 0 2		 
 		***************************************************************************************/
@@ -206,7 +207,7 @@ public class IEJoin extends Iterator{
 					}
 				}
 			}
-
+			
 			/***************************************************************************************
 			*	initialize bit-array B 0 (|B 0 | = n), and set all bits to 0		 
 			***************************************************************************************/
@@ -233,7 +234,7 @@ public class IEJoin extends Iterator{
 			 ***************************************************************************************/
 			for(int i=0; i<M; i++) {
 				int off2 = O_2[i];
-				for(int j=0; j< Math.min(off2, L2_array.size()); j++) {
+				for(int j=0; j< Math.min(off2, N); j++) {
 					B_prim[P_prim[j]]=1;
 				}
 				int off1 = O_1[P[i]];
@@ -246,6 +247,8 @@ public class IEJoin extends Iterator{
 					}
 				}
 			}
+			
+			pointer = result.size()-1;
 		
 	}
 	
@@ -255,8 +258,8 @@ public class IEJoin extends Iterator{
 			LowMemException, UnknowAttrType, UnknownKeyTypeException, Exception {
 		if(result.isEmpty())
 			return null;
-		Tuple next = result.get(0);
-		result.remove(0);
+		Tuple next = result.remove(pointer);
+		pointer--;
 		return next;
 	}
 
