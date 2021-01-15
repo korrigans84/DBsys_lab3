@@ -16,7 +16,7 @@ import catalog.*;
 class JoinsLab3Driver implements GlobalConst {
   private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
   private final boolean WRITE_TO_CSV = true;
-  private int data_rows_number = 7000;
+  private int data_rows_number = 2000;
   private boolean OK = true;
   private boolean FAIL = false;
 
@@ -49,7 +49,7 @@ class JoinsLab3Driver implements GlobalConst {
     catch (IOException e) {
       System.err.println (""+e);
     }
-    SystemDefs sysdef = new SystemDefs( dbpath, 1000, NUMBUF, "Clock" );
+    SystemDefs sysdef = new SystemDefs( dbpath, 1000000, NUMBUF, "Clock" );
 
     
     informations();
@@ -72,9 +72,9 @@ class JoinsLab3Driver implements GlobalConst {
   public boolean runTests() {
    
 	Query1a("query_2a.txt");
-	 //Query1b("query_2b.txt");
+	//Query1b("query_2b.txt");
    	
-    //Query2a("query_2a.txt");
+	Query2a("query_2a.txt");
     //Query2b("query_2b.txt");
     //Query2c("query_2b.txt");
     
@@ -94,7 +94,7 @@ class JoinsLab3Driver implements GlobalConst {
 	outFilter[1] = null;
 }
   private void CondExpr_Query1b(CondExpr[] outFilter, int operator, int outerSymbol, int innerSymbol, int operator2, int outer2Symbol, int inner2Symbol  ) {
-
+	  
 	outFilter[0].next  = null;
 	outFilter[0].op    = new AttrOperator(operator);
 	outFilter[0].type1 = new AttrType(AttrType.attrSymbol);
@@ -204,7 +204,7 @@ class JoinsLab3Driver implements GlobalConst {
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
 			if(WRITE_TO_CSV)
-				write_time_to_csv(query_time, "query_1a.csv");
+				write_time_to_csv(query_time, "query_1a.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1a: " + i);
 		} catch (Exception e) {
@@ -328,7 +328,7 @@ class JoinsLab3Driver implements GlobalConst {
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
 			if(WRITE_TO_CSV)
-				write_time_to_csv(query_time, "query_1b.csv");
+				write_time_to_csv(query_time, "query_1b.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 1b: " + i);
 			
@@ -449,7 +449,8 @@ class JoinsLab3Driver implements GlobalConst {
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
 			if(WRITE_TO_CSV)
-				write_time_to_csv(query_time, "query_2a.csv");
+				write_time_to_csv(query_time, "query_2a.csv", i);
+			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 2a: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -577,7 +578,7 @@ class JoinsLab3Driver implements GlobalConst {
 			
 			long query_time = System.currentTimeMillis() - start_time;
 			if(WRITE_TO_CSV)
-				write_time_to_csv(query_time, "query_2b.csv");
+				write_time_to_csv(query_time, "query_2b.csv", i);
 			System.out.println("Duration of the query : "+ query_time + " ms");
 			System.out.println("Output Tuples for query 2b: " + i);
 		} catch (Exception e) {
@@ -715,7 +716,7 @@ class JoinsLab3Driver implements GlobalConst {
 			// print the total number of returned tuples
 			long query_time = System.currentTimeMillis() - start_time;
 			if(WRITE_TO_CSV)
-				write_time_to_csv(query_time, "query_2c.csv");
+				write_time_to_csv(query_time, "query_2c.csv", i);
 			System.out.println("Output Tuples for query 2c: " + i);
 		} catch (Exception e) {
 			System.err.println("" + e);
@@ -752,12 +753,12 @@ class JoinsLab3Driver implements GlobalConst {
    * @param time
    * @param file
    */
-  private void write_time_to_csv( long time, String file) 
+  private void write_time_to_csv( long time, String file, int num_tuples_output) 
   {
 	  try {
 		FileWriter csv = new FileWriter(DATA_DIR_PATH+"csv/"+file, true);
 		
-		csv.write(data_rows_number + "," + time + "\n");
+		csv.write(data_rows_number + "," + time + ","+num_tuples_output+"\n");
 		csv.close();
 	} catch (IOException e) {
 		System.out.println("Enable to write result time in file "+ file);

@@ -25,6 +25,7 @@ public class SelfJoin extends Iterator{
 	private Sort L1;
 	private Sort L2;
 	private ArrayList<Tuple> L1_array, L2_array, result;
+	private int pointer = 0;
 	
 	
 	  /**constructor
@@ -79,9 +80,11 @@ public class SelfJoin extends Iterator{
 	 							if (op 1 ∈ {>, ≥}) sort L 1 in ascending order		
 		 ***************************************************************************************/
 		
-		
+		TupleOrder order;
+		TupleOrder order2 ;
+
 		if (outFilter[0].op.attrOperator == AttrOperator.aopGT || outFilter[0].op.attrOperator == AttrOperator.aopGE) {
-			TupleOrder order = new TupleOrder(TupleOrder.Ascending);
+			order = new TupleOrder(TupleOrder.Ascending);
 			//sort
 			try {
 			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
@@ -96,7 +99,7 @@ public class SelfJoin extends Iterator{
 			 ***************************************************************************************/
 		} else{
 			
-			TupleOrder order = new TupleOrder(TupleOrder.Descending);
+			order = new TupleOrder(TupleOrder.Descending);
 			//sort
 			try {
 			L1 = new Sort (in1, (short) len_in1, t1_str_sizes,
@@ -120,55 +123,53 @@ public class SelfJoin extends Iterator{
 			e1.printStackTrace();
 		}
 		
+			/***************************************************************************************
+							if (op 2 ∈ {>, ≥}) sort L 2 in descending order
+			 ***************************************************************************************/
+			if (outFilter[1].op.attrOperator == AttrOperator.aopGT || outFilter[1].op.attrOperator == AttrOperator.aopGE) {
+
+				order2 = new TupleOrder(TupleOrder.Descending);
+				try {
+					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order2, 0, amt_of_mem);
+				} catch (SortException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} 
+			
+
+			/***************************************************************************************
+			 * 				else if (op 2 ∈ {<, ≤}) sort L 2 in ascending order
+			 ***************************************************************************************/
+			else
+			{
+
+				order2 = new TupleOrder(TupleOrder.Ascending);
+				
+				try {
+					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
+							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order2, 0, amt_of_mem);
+				} catch (SortException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			} 
+			
 		
-		//if we have 2 conditions
-		if (am1 != null ) {
-			try {
-				
-
-				/***************************************************************************************
-								if (op 2 ∈ {>, ≥}) sort L 2 in descending order
-				 ***************************************************************************************/
-				if (outFilter[1].op.attrOperator == AttrOperator.aopGT || outFilter[1].op.attrOperator == AttrOperator.aopGE) {
-
-					TupleOrder order = new TupleOrder(TupleOrder.Descending);
-					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 0, amt_of_mem);
-				} 
-				
-
-				/***************************************************************************************
-				 * 				else if (op 2 ∈ {<, ≤}) sort L 2 in ascending order
-				 ***************************************************************************************/
-				
-				else if (outFilter[1].op.attrOperator == AttrOperator.aopLT || outFilter[1].op.attrOperator == AttrOperator.aopLE)
-				{
-
-					TupleOrder order = new TupleOrder(TupleOrder.Ascending);
-					
-					L2 = new Sort (in1, (short) len_in1, t1_str_sizes,
-							(iterator.Iterator) am2, outFilter[1].operand1.symbol.offset, order, 0, amt_of_mem);
-
-				} else {
-					System.out.println("Unknown operand");
-				}
-				
-			} catch (SortException | IOException e) {
-				e.printStackTrace();
+		
+		
+		//We use an array
+		L2_array = new ArrayList<Tuple>();
+		try {
+			while ((tuple = L2.get_next()) != null)
+			{	
+				L2_array.add(new Tuple(tuple));
 			}
-			
-			
-			//We use an array
-			L2_array = new ArrayList<Tuple>();
-			try {
-				while ((tuple = L2.get_next()) != null)
-				{	
-					L2_array.add(new Tuple(tuple));
-				}
-				L2.close();
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+			L2.close();
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 
 		
@@ -183,6 +184,7 @@ public class SelfJoin extends Iterator{
 		 * 						compute the permutation array P of L 2 w.r.t. L 1
 		 ***************************************************************************************/
 		//compute of permutation
+		/*
 		int[] P = new int[N];
 
 		for(int i=0; i<N; i++) {
@@ -191,7 +193,21 @@ public class SelfJoin extends Iterator{
 					P[i] = j;
 				}
 			}
+		}*/
+		
+		//Better method
+		
+		int[] P = new int[N];
+		if(order.tupleOrder == order2.tupleOrder) {
+			for(int i = 0; i<N; i++)
+				P[i]=i;
+		}else {
+			for(int i = 0; i<N; i++)
+				P[i]=N-i-1;
 		}
+		
+			
+		
 		
 
 		/***************************************************************************************
@@ -250,6 +266,8 @@ public class SelfJoin extends Iterator{
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 		}
+		
+		pointer = result.size()-1;
 	}
 	@Override
 	
@@ -259,8 +277,8 @@ public class SelfJoin extends Iterator{
 
 		if(result.isEmpty())
 			return null;
-		Tuple next = result.get(0);
-		result.remove(0);
+		Tuple next = result.remove(pointer);
+		pointer--;
 		return next;
 	}
 
