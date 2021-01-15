@@ -163,7 +163,6 @@ public class SelfJoinSinglePredicate extends Iterator{
 						Projection.Join(L1_array.get(j), in1, 
 										L1_array.get(i), in1, 
 										JTuple, proj_list, n_out_flds);
-							
 						result.add(new Tuple(JTuple));
 				}
 			}

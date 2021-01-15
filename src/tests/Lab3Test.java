@@ -15,7 +15,7 @@ import catalog.*;
 
 class JoinsLab3Driver implements GlobalConst {
   private final String DATA_DIR_PATH = "/home/julien/Documents/EURECOM/DBSys/LAB3/queriesdata/";
-  private int data_rows_number = 1000;
+  private int data_rows_number = 100;
   private boolean OK = true;
   private boolean FAIL = false;
 
